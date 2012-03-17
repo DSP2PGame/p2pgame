@@ -2,6 +2,7 @@ from ui.board import *
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from bootstrap.server import *
+from bootstrap.player import *
 from core.register import *
 import sys
 
@@ -30,7 +31,11 @@ gameBoard.move(BOARD_WIDGET_OFFSET_WIDTH, BOARD_WIDGET_OFFSET_HEIGHT)
 gameBoard.resize(BOARD_LEN + 1, BOARD_LEN + 1)
 
 # Register @ Server
-newRegister()
+myProfile = PlayerProfile()
+(theServer, myPort) = getFreePort() 
+clientPP = newRegister(myProfile, myPort)
+theServer.shutdown()
+print clientPP, myProfile.power, myProfile.ID
 
 # Test Use
 pix = PixelWidget(gameBoard)
