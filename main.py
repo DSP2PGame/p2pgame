@@ -2,7 +2,7 @@ from ui.board import *
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from bootstrap.server import *
-from bootstrap.player import *
+from bootstrap.newplayer import *
 from core.register import *
 import sys
 
@@ -16,7 +16,7 @@ MAIN_WIDGET_COLOR = "grey"
 BOARD_WIDGET_COLOR = "white"
 BOARD_WIDGET_OFFSET_WIDTH = 50
 BOARD_WIDGET_OFFSET_HEIGHT = 50
-MY_PIXEL_COLOR = "blue"
+OWN_N = 2
 
 app = QApplication(sys.argv)
 
@@ -30,20 +30,35 @@ gameBoard.setPalette(QPalette(QColor(BOARD_WIDGET_COLOR)))
 gameBoard.move(BOARD_WIDGET_OFFSET_WIDTH, BOARD_WIDGET_OFFSET_HEIGHT)
 gameBoard.resize(BOARD_LEN + 1, BOARD_LEN + 1)
 
-# Register @ Server
-myProfile = PlayerProfile()
-(theServer, myPort) = getFreePort() 
-clientPP = newRegister(myProfile, myPort)
-theServer.shutdown()
-print clientPP, myProfile.power, myProfile.ID
+# Init
+lock = threading.Lock()
+gameStatus = {}
+for i in xrange(0, NUM_GRID_PER_BOARD_ROW):
+	for j in xrange(0, NUM_GRID_PER_BOARD_ROW):
+		gameStatus[(i,j)] = -1
 
-# Test Use
-pix = PixelWidget(gameBoard)
-pix.resize(GRID_LEN, GRID_LEN)
-pix.setAutoFillBackground(True)
-pix.setPalette(QPalette(QColor(MY_PIXEL_COLOR)))
-pix.setFocusPolicy(Qt.StrongFocus)
-# End Test Use
+# Register @ Server
+myID = None
+playerPos = {}
+(theServer, myPort) = getFreePort(playerPos, gameStatus, lock) 
+(clientPP, myID) = newRegister(myID, playerPos, myPort, lock)
+
+if len(clientPP) == 0:
+	lock.acquire()
+	playerPos[myID].x = 0
+	playerPos[myID].y = 0
+	gameStatus[(0,0)] = myID
+	lock.release()
+else:
+	askGameStatus(playerPos, gameStatus, lock)
+	chooseInitGrid(playerPos, gameStatus, lock)
+
+for other in iter(playerPos):
+	if other != myID:
+		paintOther(gameBoard, playerPos[other], gameStatus, lock)
+	else:
+		paintMyself(gameBoard, playerPos[myID], gameStatus, lock)
 
 mainWidget.show()
 app.exec_()
+theServer.shutdown()
