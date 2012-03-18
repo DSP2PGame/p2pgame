@@ -3,7 +3,7 @@ from core.player import *
 import pickle
 import socket
 
-def newRegister(myID, playerPos, myPort, lock):
+def newRegister(myPort, playerPos, lock):
 	data = (0, myPort)
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	sock.sendto(pickle.dumps(data), (SERVER_HOST, SERVER_PORT))

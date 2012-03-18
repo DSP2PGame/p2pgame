@@ -1,19 +1,20 @@
 import SocketServer
 import threading
 import pickle
+from core.peer_server import *
 
-def getFreePort(playerPos, gameStatus, lock):
+def getFreePort(playerPos, gameStatus, hasStatus, lock):
 	port = 10000
 	while True:
 		try:
 			server = SocketServer.UDPServer(("", port), PeerUDPHandler)
-			#server.serve_forever()
 		except IOError:
 			port += 1
 		else:
 			break;
 	server.playerPos = playerPos
 	server.gameStatus = gameStatus
+	server.hasStatus = hasStatus
 	server.lock = lock
 	t = threading.Thread(target=peerRecThread, name = "PeerReceivingThread", kwargs={"server":server})
 	t.start()
@@ -21,9 +22,3 @@ def getFreePort(playerPos, gameStatus, lock):
 
 def peerRecThread(server):
 	server.serve_forever()
-
-class PeerUDPHandler(SocketServer.BaseRequestHandler):
-	def handle(self):
-		data = pickle.loads(self.request[0].strip())
-		socket = self.request[1]
-					

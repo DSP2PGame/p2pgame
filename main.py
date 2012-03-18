@@ -35,25 +35,31 @@ lock = threading.Lock()
 gameStatus = {}
 for i in xrange(0, NUM_GRID_PER_BOARD_ROW):
 	for j in xrange(0, NUM_GRID_PER_BOARD_ROW):
-		gameStatus[(i,j)] = -1
+		gameStatus[(i,j)] = -1 #unoccupied
+hasStatus = threading.Event()
+hasStatus.clear()
+canMoveSignal = threading.Event()
 
 # Register @ Server
 myID = None
 playerPos = {}
-(theServer, myPort) = getFreePort(playerPos, gameStatus, lock) 
-(clientPP, myID) = newRegister(myID, playerPos, myPort, lock)
+(theServer, myPort) = getFreePort(playerPos, gameStatus, hasStatus, lock) 
+(clientPP, myID) = newRegister(myPort, playerPos, lock)
 
 if len(clientPP) == 0:
+	hasStatus.set()
 	lock.acquire()
 	playerPos[myID].x = 0
 	playerPos[myID].y = 0
 	gameStatus[(0,0)] = myID
 	lock.release()
 else:
-	askGameStatus(playerPos, gameStatus, lock)
-	chooseInitGrid(playerPos, gameStatus, lock)
+	for pp in clientPP.itervalues():
+		playerPos[pp[0]] = PlayerProfile(power = pp[1])
+	askGameStatus(clientPP, myPort, hasStatus, myID, playerPos[myID].power)
+	chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP, myPort, playerPos[myID].power, canMoveSignal)
 
-for other in iter(playerPos):
+for other in playerPos:
 	if other != myID:
 		paintOther(gameBoard, playerPos[other], gameStatus, lock)
 	else:
