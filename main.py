@@ -48,6 +48,7 @@ myPainter.connectSignal()
 (theServer, myPort) = getFreePort(playerPos, gameStatus, hasStatus, canMoveSignal, lock, myPainter) 
 (clientPP, myID) = newRegister(myPort, playerPos, lock)
 theServer.clientPP = clientPP
+playerPos[myID].port = myPort
 
 if len(clientPP) == 0:
 	hasStatus.set()
@@ -55,6 +56,11 @@ if len(clientPP) == 0:
 	playerPos[myID].x = 0
 	playerPos[myID].y = 0
 	gameStatus[(0,0)] = myID
+	playerPos[myID].playerPos = playerPos
+	playerPos[myID].gameStatus = gameStatus
+	playerPos[myID].lock = lock
+	playerPos[myID].clientPP = clientPP
+	playerPos[myID].canMoveSignal = canMoveSignal
 	lock.release()
 else:
 	for pp in clientPP.iteritems():
@@ -62,6 +68,7 @@ else:
 		playerPos[pp[1][0]].groupID = pp[1][2]
 		playerPos[pp[1][0]].ip = pp[0][0]
 		playerPos[pp[1][0]].port = pp[0][1]
+		playerPos[pp[1][0]].ID = pp[1][0]
 	askGameStatus(clientPP, myPort, hasStatus, myID, playerPos[myID].power, playerPos[myID].groupID)
 	chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP, myPort, playerPos[myID].power, playerPos[myID].groupID, canMoveSignal)
 

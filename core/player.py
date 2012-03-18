@@ -1,20 +1,17 @@
-from ui.board import *
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from core.send_message import *
-
-MY_PIXEL_COLOR = "blue"
-OTHER_PIXEL_COLOR = "pink"
-OWN_N = 2
+from const import *
 
 class PlayerProfile(object):
-	def __init__(self, power = None, x = None, y = None, groupID = None, ip = None, port = None):
+	def __init__(self, power = None, x = None, y = None, groupID = None, ip = None, port = None, ID = None):
 		self.power = power
 		self.x = x
 		self.y = y 
 		self.groupID = groupID
 		self.ip = ip
 		self.port = port
+		self.ID = ID
 
 def askGameStatus(clientPP, myPort, hasStatus, myID, myPower, myGroup):
 	print "Ask Game Status"
@@ -37,12 +34,20 @@ def chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP, myPort, myPower,
 				print "can not move"
 	if playerPos[myID].x == None:
 		print "Something's Wrong!"
+	playerPos[myID].playerPos = playerPos
+	playerPos[myID].gameStatus = gameStatus
+	playerPos[myID].lock = lock
+	playerPos[myID].clientPP = clientPP
+	playerPos[myID].canMoveSignal = canMoveSignal
 	print "Finish Putting Grid"
 
 def canMove(myID, grid, playerPos, gameStatus, lock, clientPP, myPort, myPower, myGroup, canMoveSignal):
 	owner = findOwer(grid, playerPos, gameStatus)
 	print "Owner of Grid:{} {}".format(grid, owner)
-	if owner != -1: # has owner
+	if owner == myID and gameStatus[grid] != -1:
+		print "I'm the Owner, and the grid already has someone else"
+		return False
+	if owner != -1 and owner != myID: # has owner, it's not myself
 		print "Send Request to Owner"
 		canMoveSignal.clear()
 		sendMsg(playerPos[owner].ip, playerPos[owner].port, (3, grid, myPort, myID, myPower, myGroup))
@@ -54,17 +59,13 @@ def canMove(myID, grid, playerPos, gameStatus, lock, clientPP, myPort, myPower, 
 	print "Has Permission To Occupy"
 	lock.acquire()
 	multicastMove(myID, myPort, myPower, myGroup, grid, clientPP)
+	if (playerPos[myID].x != None):
+		gameStatus[(playerPos[myID].x, playerPos[myID].y)] = -1
 	playerPos[myID].x = grid[0]
 	playerPos[myID].y = grid[1]
 	gameStatus[grid] = myID
 	lock.release()
 	return True
-
-def checkRange(x):
-	if (x >= 0 and x < NUM_GRID_PER_BOARD_ROW):
-		return True
-	else:
-		return False
 
 def findOwer(grid, playerPos, gameStatus):
 	owner = -1

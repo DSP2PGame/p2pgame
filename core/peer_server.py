@@ -2,7 +2,7 @@ import SocketServer
 import pickle
 from core.send_message import *
 from core.player import *
-from ui.board import *
+from const import *
 
 class PeerUDPHandler(SocketServer.BaseRequestHandler):
 	def handle(self):
@@ -14,7 +14,7 @@ class PeerUDPHandler(SocketServer.BaseRequestHandler):
 			print "SERVER: Put New Player's Info Into clientPP & playerPos"
 			self.server.lock.acquire()
 			self.server.clientPP[(self.client_address[0], data[1])] = (data[2], data[3], data[4])
-			self.server.playerPos[data[2]] = PlayerProfile(ip = self.client_address[0], port = data[1], groupID = data[3], power = data[4])
+			self.server.playerPos[data[2]] = PlayerProfile(ip = self.client_address[0], port = data[1], groupID = data[3], power = data[4], ID = data[2])
 			print "SERVER: send game status to ID{}".format(data[2])
 			sendMsg(self.client_address[0], data[1], (2, self.server.gameStatus)) #return game status
 			self.server.lock.release()
@@ -64,5 +64,5 @@ class PeerUDPHandler(SocketServer.BaseRequestHandler):
 				self.server.gameStatus[data[5]] = data[2]
 				self.server.playerPos[data[2]].x = data[5][0]
 				self.server.playerPos[data[2]].y = data[5][1]
-				self.server.myPainter.moveOtherSignal.emit(data[2])
+				self.server.myPainter.otherMoveSignal.emit(data[2])
 			self.server.lock.release()

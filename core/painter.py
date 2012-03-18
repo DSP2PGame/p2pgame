@@ -1,6 +1,7 @@
 from PyQt4.QtCore import *
-from ui.board import *
 from core.player import *
+from const import *
+from ui.board import *
 
 class MyPainter(QObject):
 	paintNewOtherSignal = pyqtSignal(int)
@@ -25,7 +26,7 @@ class MyPainter(QObject):
 		self.playerPos[ID].pix.resize(GRID_LEN, GRID_LEN)
 		self.playerPos[ID].pix.setAutoFillBackground(True)
 		self.playerPos[ID].pix.setPalette(QPalette(QColor(OTHER_PIXEL_COLOR)))
-		self.playerPos[ID].pix.setFocusPolicy(Qt.StrongFocus)
+		self.playerPos[ID].pix.setFocusPolicy(Qt.NoFocus)
 		self.playerPos[ID].pix.move(self.playerPos[ID].x * GRID_LEN, self.playerPos[ID].y * GRID_LEN)
 		self.playerPos[ID].pix.show()
 
@@ -38,5 +39,3 @@ class MyPainter(QObject):
 		myProfile.pix.setFocusPolicy(Qt.StrongFocus)
 		myProfile.pix.move(myProfile.x * GRID_LEN, myProfile.y * GRID_LEN)
 		myProfile.pix.profile = myProfile
-		myProfile.pix.gameStatus = gameStatus
-		myProfile.pix.lock = lock

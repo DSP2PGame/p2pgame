@@ -1,8 +1,6 @@
 import SocketServer
 import pickle
-
-SERVER_HOST = "192.168.1.7"
-SERVER_PORT = 9999
+from const import *
 
 serverPP = {} # (ip,port):(id,power,groupID) server keeps information about all active players' profile #TODO only one group
 GlobalID = 0 # TODO: is it too simple?

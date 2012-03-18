@@ -2,10 +2,8 @@
 
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
-
-GRID_LEN = 20
-NUM_GRID_PER_BOARD_ROW = 10
-BOARD_LEN = GRID_LEN * NUM_GRID_PER_BOARD_ROW
+from core.player import *
+from const import *
 
 class BoardWidget(QWidget):
 	def paintEvent(self, event):
@@ -20,12 +18,28 @@ class BoardWidget(QWidget):
 class PixelWidget(QWidget):
 	def keyPressEvent(self, event):
 		if event.key() == Qt.Key_Down:
-			self.move(self.x(), self.checkBound(self.y() + GRID_LEN))
+			if checkRange(self.profile.y + 1) and canMove(self.profile.ID, (self.profile.x, self.profile.y+1), self.profile.playerPos, self.profile.gameStatus, self.profile.lock, self.profile.clientPP, self.profile.port, self.profile.power, self.profile.groupID, self.profile.canMoveSignal):
+				self.move(self.x(), self.checkBound(self.y() + GRID_LEN))
+			else:
+				self.cannotMove()
 		elif event.key() == Qt.Key_Up:
-			self.move(self.x(), self.checkBound(self.y() - GRID_LEN))
+			if checkRange(self.profile.y - 1) and canMove(self.profile.ID, (self.profile.x, self.profile.y-1), self.profile.playerPos, self.profile.gameStatus, self.profile.lock, self.profile.clientPP, self.profile.port, self.profile.power, self.profile.groupID, self.profile.canMoveSignal):
+				self.move(self.x(), self.checkBound(self.y() - GRID_LEN))
+			else:
+				self.cannotMove()
 		elif event.key() == Qt.Key_Left:
-			self.move(self.checkBound(self.x() - GRID_LEN), self.y())
+			if checkRange(self.profile.x - 1) and canMove(self.profile.ID, (self.profile.x - 1, self.profile.y), self.profile.playerPos, self.profile.gameStatus, self.profile.lock, self.profile.clientPP, self.profile.port, self.profile.power, self.profile.groupID, self.profile.canMoveSignal):
+				self.move(self.checkBound(self.x() - GRID_LEN), self.y())
+			else:
+				self.cannotMove()
 		elif event.key() == Qt.Key_Right:
-			self.move(self.checkBound(self.x() + GRID_LEN), self.y())
+			if checkRange(self.profile.x + 1) and canMove(self.profile.ID, (self.profile.x + 1, self.profile.y), self.profile.playerPos, self.profile.gameStatus, self.profile.lock, self.profile.clientPP, self.profile.port, self.profile.power, self.profile.groupID, self.profile.canMoveSignal):
+				self.move(self.checkBound(self.x() + GRID_LEN), self.y())
+			else:
+				self.cannotMove()
+	
+	def cannotMove(self):
+		print "GUI: Can not move to that grid"
+
 	def checkBound(self, x):
 		return min(max(0, x), BOARD_LEN - GRID_LEN)
