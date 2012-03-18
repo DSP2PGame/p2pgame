@@ -3,7 +3,7 @@ import threading
 import pickle
 from core.peer_server import *
 
-def getFreePort(playerPos, gameStatus, hasStatus, lock):
+def getFreePort(playerPos, gameStatus, hasStatus, canMoveSignal, lock, myPainter):
 	port = 10000
 	while True:
 		try:
@@ -15,7 +15,9 @@ def getFreePort(playerPos, gameStatus, hasStatus, lock):
 	server.playerPos = playerPos
 	server.gameStatus = gameStatus
 	server.hasStatus = hasStatus
+	server.canMoveSignal = canMoveSignal
 	server.lock = lock
+	server.myPainter = myPainter
 	t = threading.Thread(target=peerRecThread, name = "PeerReceivingThread", kwargs={"server":server})
 	t.start()
 	return (server, port)

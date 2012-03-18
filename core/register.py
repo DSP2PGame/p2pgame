@@ -11,6 +11,7 @@ def newRegister(myPort, playerPos, lock):
 	myID = received[0]
 	lock.acquire()
 	playerPos[myID] = PlayerProfile(power = received[1])
+	playerPos[myID].groupID = received[2]
 	lock.release()
-	return received[2], myID
+	return received[3], myID
 

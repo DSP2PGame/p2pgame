@@ -5,25 +5,29 @@ from core.send_message import *
 
 MY_PIXEL_COLOR = "blue"
 OTHER_PIXEL_COLOR = "pink"
+OWN_N = 2
 
 class PlayerProfile(object):
-	def __init__(self, power = None, x = None, y = None):
+	def __init__(self, power = None, x = None, y = None, groupID = None, ip = None, port = None):
 		self.power = power
 		self.x = x
 		self.y = y 
+		self.groupID = groupID
+		self.ip = ip
+		self.port = port
 
-def askGameStatus(clientPP, myPort, hasStatus, myID, myPower):
-	#TEST USE: Ask everyone. TODO:Only ask one group
+def askGameStatus(clientPP, myPort, hasStatus, myID, myPower, myGroup):
 	for x in iter(clientPP):
-		print x[0], x[1]
-		sendMsg(x[0], x[1], (1, myPort, myID, myPower)) #Ask For Game Status
+		if (clientPP[x][2] == myGroup):	
+			print x[0], x[1]
+			sendMsg(x[0], x[1], (1, myPort, myID, myGroup, myPower)) #Ask For Game Status
 	hasStatus.wait(10) # TimeOut = 10s
 
-def chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP):
+def chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP, myPort, myPower, myGroup, canMoveSignal):
 	for grid in gameStatus:
 		if gameStatus[grid] == -1:
 			print "choose {}".format(grid)
-			if canMove(myID, grid, playerPos, gameStatus, lock, clientPP):
+			if canMove(myID, grid, playerPos, gameStatus, lock, clientPP, myPort, myPower, myGroup, canMoveSignal):
 				print "move to {}".format(grid)
 				break
 			else:
@@ -31,48 +35,39 @@ def chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP):
 	if playerPos[myID].x == None:
 		print "Something's Wrong!"
 
-def canMove(myID, grid, playerPos, gameStatus, lock, clientPP, myPort, myPower, canMoveSignal):
-	ower = findOwer(grid, playerPos, gameStatus)
-	if ower != -1: # has owner
+def canMove(myID, grid, playerPos, gameStatus, lock, clientPP, myPort, myPower, myGroup, canMoveSignal):
+	owner = findOwer(grid, playerPos, gameStatus)
+	print "Owner:{}".format(owner)
+	if owner != -1: # has owner
 		canMoveSignal.clear()
-		sendMsg()#TODO
+		sendMsg(playerPos[owner].ip, playerPos[owner].port, (3, grid, myPort, myID, myPower, myGroup))
 		canMoveSignal.wait(10) #Timeout=10s
-		if (gameStatus[grid] == -2): #can move
+		if (gameStatus[grid] == -3): #can move
 			pass
 		else:
 			return False
 	lock.acquire()
-	multicastMove(myID, myPort, myPower, grid, clientPP)
+	multicastMove(myID, myPort, myPower, myGroup, grid, clientPP)
 	playerPos[myID].x = grid[0]
 	playerPos[myID].y = grid[1]
 	gameStatus[grid] = myID
 	lock.release()
 	return True
 
-def findOwer(grid, playerPos, gameStatus)
-	return -1
+def checkRange(x):
+	if (x >= 0 and x < NUM_GRID_PER_BOARD_ROW):
+		return True
+	else:
+		return False
 
-def multicastMove(myID, myPort, myPower, grid, clientPP)
-	pass
-
-def paintOther(gameBoard, otherProfile, gameStatus, lock):
-	otherProfile.pix = QWidget(gameBoard)
-	otherProfile.pix.resize(GRID_LEN, GRID_LEN)
-	otherProfile.pix.setAutoFillBackground(True)
-	otherProfile.pix.setPalette(QPalette(QColor(OTHER_PIXEL_COLOR)))
-	otherProfile.pix.setFocusPolicy(Qt.StrongFocus)
-	otherProfile.pix.move(otherProfile.x * GRID_LEN, otherProfile.y * GRID_LEN)
-
-def paintMyself(gameBoard, myProfile, gameStatus, lock):
-	myProfile.pix = PixelWidget(gameBoard)
-	myProfile.pix.resize(GRID_LEN, GRID_LEN)
-	myProfile.pix.setAutoFillBackground(True)
-	myProfile.pix.setPalette(QPalette(QColor(MY_PIXEL_COLOR)))
-	myProfile.pix.setFocusPolicy(Qt.StrongFocus)
-	myProfile.pix.move(myProfile.x * GRID_LEN, myProfile.y * GRID_LEN)
-	myProfile.pix.profile = myProfile
-	myProfile.pix.gameStatus = gameStatus
-	myProfile.pix.lock = lock
+def findOwer(grid, playerPos, gameStatus):
+	owner = -1
+	for i in xrange(-OWN_N, OWN_N + 1):
+		for j in xrange(-OWN_N, OWN_N + 1):
+			if (checkRange(grid[0] + i) and checkRange(grid[1] + j) and gameStatus[(grid[0]+i, grid[1]+j)] >= 0):
+				if (owner == -1 or playerPos[owner].power < playerPos[gameStatus[(grid[0]+i, grid[1]+j)]].power):
+					owner = gameStatus[(grid[0]+i, grid[1]+j)]
+	return owner
 
 def updatePlayerPos(newStatus, gameStatus, playerPos):
 	for grid in newStatus:

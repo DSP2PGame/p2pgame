@@ -4,6 +4,7 @@ from PyQt4.QtCore import *
 from bootstrap.server import *
 from bootstrap.newplayer import *
 from core.register import *
+from core.painter import *
 import sys
 
 if len(sys.argv) > 1 and sys.argv[1] == "B": #bootstrapping server
@@ -16,7 +17,6 @@ MAIN_WIDGET_COLOR = "grey"
 BOARD_WIDGET_COLOR = "white"
 BOARD_WIDGET_OFFSET_WIDTH = 50
 BOARD_WIDGET_OFFSET_HEIGHT = 50
-OWN_N = 2
 
 app = QApplication(sys.argv)
 
@@ -39,12 +39,15 @@ for i in xrange(0, NUM_GRID_PER_BOARD_ROW):
 hasStatus = threading.Event()
 hasStatus.clear()
 canMoveSignal = threading.Event()
+playerPos = {}
+myID = None
+myPainter = MyPainter(gameBoard, playerPos)
+myPainter.connectSignal()
 
 # Register @ Server
-myID = None
-playerPos = {}
-(theServer, myPort) = getFreePort(playerPos, gameStatus, hasStatus, lock) 
+(theServer, myPort) = getFreePort(playerPos, gameStatus, hasStatus, canMoveSignal, lock, myPainter) 
 (clientPP, myID) = newRegister(myPort, playerPos, lock)
+theServer.clientPP = clientPP
 
 if len(clientPP) == 0:
 	hasStatus.set()
@@ -54,16 +57,19 @@ if len(clientPP) == 0:
 	gameStatus[(0,0)] = myID
 	lock.release()
 else:
-	for pp in clientPP.itervalues():
-		playerPos[pp[0]] = PlayerProfile(power = pp[1])
-	askGameStatus(clientPP, myPort, hasStatus, myID, playerPos[myID].power)
-	chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP, myPort, playerPos[myID].power, canMoveSignal)
+	for pp in clientPP.iteritems():
+		playerPos[pp[1][0]] = PlayerProfile(power = pp[1][1])
+		playerPos[pp[1][0]].groupID = pp[1][2]
+		playerPos[pp[1][0]].ip = pp[0][0]
+		playerPos[pp[1][0]].port = pp[0][1]
+	askGameStatus(clientPP, myPort, hasStatus, myID, playerPos[myID].power, playerPos[myID].groupID)
+	chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP, myPort, playerPos[myID].power, playerPos[myID].groupID, canMoveSignal)
 
 for other in playerPos:
 	if other != myID:
-		paintOther(gameBoard, playerPos[other], gameStatus, lock)
+		myPainter.paintOther(other)
 	else:
-		paintMyself(gameBoard, playerPos[myID], gameStatus, lock)
+		myPainter.paintMyself(playerPos[myID], gameStatus, lock)
 
 mainWidget.show()
 app.exec_()
