@@ -16,19 +16,21 @@ class MyPainter(QObject):
 		self.otherMoveSignal.connect(self.moveOther)
 	
 	def moveOther(self, ID):
+		print "PAINTER: Move Player{} Signal".format(ID)
 		self.playerPos[ID].pix.move(self.playerPos[ID].x * GRID_LEN, self.playerPos[ID].y * GRID_LEN)
 	
 	def paintOther(self, ID):
+		print "PAINTER: New Player{} Appears on Board".format(ID)
 		self.playerPos[ID].pix = QWidget(self.gameBoard)
 		self.playerPos[ID].pix.resize(GRID_LEN, GRID_LEN)
 		self.playerPos[ID].pix.setAutoFillBackground(True)
 		self.playerPos[ID].pix.setPalette(QPalette(QColor(OTHER_PIXEL_COLOR)))
 		self.playerPos[ID].pix.setFocusPolicy(Qt.StrongFocus)
-		print self.playerPos[ID].x * GRID_LEN, self.playerPos[ID].y * GRID_LEN
 		self.playerPos[ID].pix.move(self.playerPos[ID].x * GRID_LEN, self.playerPos[ID].y * GRID_LEN)
 		self.playerPos[ID].pix.show()
 
 	def paintMyself(self, myProfile, gameStatus, lock):
+		print "PAINTER: Paint Myself"
 		myProfile.pix = PixelWidget(self.gameBoard)
 		myProfile.pix.resize(GRID_LEN, GRID_LEN)
 		myProfile.pix.setAutoFillBackground(True)

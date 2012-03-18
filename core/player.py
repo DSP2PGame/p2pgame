@@ -17,13 +17,16 @@ class PlayerProfile(object):
 		self.port = port
 
 def askGameStatus(clientPP, myPort, hasStatus, myID, myPower, myGroup):
+	print "Ask Game Status"
 	for x in iter(clientPP):
 		if (clientPP[x][2] == myGroup):	
-			print x[0], x[1]
+			print "Ask Peer % {} {} About Game Status".format(x[0], x[1])
 			sendMsg(x[0], x[1], (1, myPort, myID, myGroup, myPower)) #Ask For Game Status
 	hasStatus.wait(10) # TimeOut = 10s
+	print "Got Game Status"
 
 def chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP, myPort, myPower, myGroup, canMoveSignal):
+	print "Choose Init Grid"
 	for grid in gameStatus:
 		if gameStatus[grid] == -1:
 			print "choose {}".format(grid)
@@ -34,11 +37,13 @@ def chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP, myPort, myPower,
 				print "can not move"
 	if playerPos[myID].x == None:
 		print "Something's Wrong!"
+	print "Finish Putting Grid"
 
 def canMove(myID, grid, playerPos, gameStatus, lock, clientPP, myPort, myPower, myGroup, canMoveSignal):
 	owner = findOwer(grid, playerPos, gameStatus)
-	print "Owner:{}".format(owner)
+	print "Owner of Grid:{} {}".format(grid, owner)
 	if owner != -1: # has owner
+		print "Send Request to Owner"
 		canMoveSignal.clear()
 		sendMsg(playerPos[owner].ip, playerPos[owner].port, (3, grid, myPort, myID, myPower, myGroup))
 		canMoveSignal.wait(10) #Timeout=10s
@@ -46,6 +51,7 @@ def canMove(myID, grid, playerPos, gameStatus, lock, clientPP, myPort, myPower, 
 			pass
 		else:
 			return False
+	print "Has Permission To Occupy"
 	lock.acquire()
 	multicastMove(myID, myPort, myPower, myGroup, grid, clientPP)
 	playerPos[myID].x = grid[0]
@@ -70,6 +76,7 @@ def findOwer(grid, playerPos, gameStatus):
 	return owner
 
 def updatePlayerPos(newStatus, gameStatus, playerPos):
+	print "Update GameStatus and PlayerPos"
 	for grid in newStatus:
 		gameStatus[grid] = newStatus[grid]
 		if newStatus[grid] != -1:

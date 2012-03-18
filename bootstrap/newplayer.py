@@ -4,6 +4,9 @@ import pickle
 from core.peer_server import *
 
 def getFreePort(playerPos, gameStatus, hasStatus, canMoveSignal, lock, myPainter):
+
+	print "Get Port Number & Start Peer Server"
+
 	port = 10000
 	while True:
 		try:
