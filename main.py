@@ -5,30 +5,41 @@ from bootstrap.server import *
 from bootstrap.newplayer import *
 from core.register import *
 from core.painter import *
+from ui.exit import *
 import sys
 
 if len(sys.argv) > 1 and sys.argv[1] == "B": #bootstrapping server
 	print "Server Start"
 	startServer()
 
-MAIN_WIDGET_WIDTH = 300
-MAIN_WIDGET_HEIGHT = 300
+#MAIN_WIDGET_WIDTH = 300
+#MAIN_WIDGET_HEIGHT = 300
 MAIN_WIDGET_COLOR = "grey"
 BOARD_WIDGET_COLOR = "white"
-BOARD_WIDGET_OFFSET_WIDTH = 50
-BOARD_WIDGET_OFFSET_HEIGHT = 50
+#BOARD_WIDGET_OFFSET_WIDTH = 50
+#BOARD_WIDGET_OFFSET_HEIGHT = 50
 
 app = QApplication(sys.argv)
 
 mainWidget = QWidget()
 mainWidget.setPalette(QPalette(QColor(MAIN_WIDGET_COLOR)))
-mainWidget.resize(MAIN_WIDGET_WIDTH, MAIN_WIDGET_HEIGHT)
+#mainWidget.resize(MAIN_WIDGET_WIDTH, MAIN_WIDGET_HEIGHT)
+mainWidget.setAttribute(Qt.WA_QuitOnClose)
 
+exitButton = QPushButton("Exit")
 gameBoard = BoardWidget(mainWidget)
+
+layout = QBoxLayout(QBoxLayout.LeftToRight)
+layout.addWidget(gameBoard)
+layout.addWidget(exitButton)
+mainWidget.setLayout(layout)
+
 gameBoard.setAutoFillBackground(True)
 gameBoard.setPalette(QPalette(QColor(BOARD_WIDGET_COLOR)))
-gameBoard.move(BOARD_WIDGET_OFFSET_WIDTH, BOARD_WIDGET_OFFSET_HEIGHT)
-gameBoard.resize(BOARD_LEN + 1, BOARD_LEN + 1)
+#gameBoard.move(BOARD_WIDGET_OFFSET_WIDTH, BOARD_WIDGET_OFFSET_HEIGHT)
+#gameBoard.resize(BOARD_LEN + 1, BOARD_LEN + 1)
+gameBoard.setMinimumSize(BOARD_LEN + 1, BOARD_LEN + 1);
+
 
 # Init
 lock = threading.Lock()
@@ -49,6 +60,9 @@ myPainter.connectSignal()
 (clientPP, myID) = newRegister(myPort, playerPos, lock)
 theServer.clientPP = clientPP
 playerPos[myID].port = myPort
+
+exitBehavior = ExitButtonBehavior(theServer, mainWidget)
+exitButton.clicked.connect(exitBehavior.clickExitButton)
 
 if len(clientPP) == 0:
 	hasStatus.set()
