@@ -1,1 +1,1 @@
-__all__ = ["server",]
+__all__ = ["server", "newplayer"]

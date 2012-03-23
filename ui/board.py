@@ -17,26 +17,29 @@ class BoardWidget(QWidget):
 
 class PixelWidget(QWidget):
 	def keyPressEvent(self, event):
+		gvar = self.profile.gvar
 		if event.key() == Qt.Key_Down:
-			if checkRange(self.profile.y + 1) and canMove(self.profile.ID, (self.profile.x, self.profile.y+1), self.profile.playerPos, self.profile.gameStatus, self.profile.lock, self.profile.clientPP, self.profile.port, self.profile.power, self.profile.groupID, self.profile.canMoveSignal):
+			if checkRange(self.profile.y + 1) and canMove((self.profile.x, self.profile.y+1), gvar):
 				self.move(self.x(), self.checkBound(self.y() + GRID_LEN))
 			else:
 				self.cannotMove()
 		elif event.key() == Qt.Key_Up:
-			if checkRange(self.profile.y - 1) and canMove(self.profile.ID, (self.profile.x, self.profile.y-1), self.profile.playerPos, self.profile.gameStatus, self.profile.lock, self.profile.clientPP, self.profile.port, self.profile.power, self.profile.groupID, self.profile.canMoveSignal):
+			if checkRange(self.profile.y - 1) and canMove((self.profile.x, self.profile.y-1), gvar):
 				self.move(self.x(), self.checkBound(self.y() - GRID_LEN))
 			else:
 				self.cannotMove()
 		elif event.key() == Qt.Key_Left:
-			if checkRange(self.profile.x - 1) and canMove(self.profile.ID, (self.profile.x - 1, self.profile.y), self.profile.playerPos, self.profile.gameStatus, self.profile.lock, self.profile.clientPP, self.profile.port, self.profile.power, self.profile.groupID, self.profile.canMoveSignal):
+			if checkRange(self.profile.x - 1) and canMove((self.profile.x - 1, self.profile.y), gvar):
 				self.move(self.checkBound(self.x() - GRID_LEN), self.y())
 			else:
 				self.cannotMove()
 		elif event.key() == Qt.Key_Right:
-			if checkRange(self.profile.x + 1) and canMove(self.profile.ID, (self.profile.x + 1, self.profile.y), self.profile.playerPos, self.profile.gameStatus, self.profile.lock, self.profile.clientPP, self.profile.port, self.profile.power, self.profile.groupID, self.profile.canMoveSignal):
+			if checkRange(self.profile.x + 1) and canMove((self.profile.x + 1, self.profile.y), gvar):
 				self.move(self.checkBound(self.x() + GRID_LEN), self.y())
 			else:
 				self.cannotMove()
+		else:
+			print "GUI: This Key's Behavior is not defined"
 	
 	def cannotMove(self):
 		print "GUI: Can not move to that grid"

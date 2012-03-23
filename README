@@ -1,13 +1,18 @@
 Introduction of The Pixel Game:
 	TODO
 
+NOTE:
+	1. There is some comment in the code with "TODO"
+	2. Improve UI
+	3. Add features => calculate target, timer counting down, maintain scores, etc...
+
 What I've Done:
 	1. Basic Bootstrapping Server
 	2. Basic (Ugly) User Interface
 	3. Basic Interaction Between Multiple Users
 
 What I'm Going To Do:
-	1. refactor the whole code -> current code can run, but it's really ugly...
+	1. [Kinda Done] refactor the whole code -> current code can run, but it's really ugly...
 	2. add "real" exit feature
 	3. add my uncertainties in Issues
 
@@ -20,6 +25,6 @@ How To Run The Code For Fun:
 	5. in another console: python main.py
 		->This will run the game
 	6. you can run multiple games and test the interaction between all players
-	7. exit feature is not completely supportted yet. it only stop the program, but it will not send LEAVE msg to server or other players -> I'm writing this feature now~
+	7. exit feature is not completely supportted yet. it only stop the program, but it will not send LEAVE msg to server or other players -> I'm writing this feature after next Monday~
 
 Enjoy the little demo :D

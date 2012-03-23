@@ -13,58 +13,74 @@ class PlayerProfile(object):
 		self.port = port
 		self.ID = ID
 
-def askGameStatus(clientPP, myPort, hasStatus, myID, myPower, myGroup):
+def putNewPlayerOnBoard(gvar):
+	if len(gvar.clientPP == 0):
+		gvar.hasStatus.set()
+		gvar.lock.acquire()
+		gvar.playerPos[gvar.myID].x = 0
+		gvar.playerPos[gvar.myID].y = 0
+		gvar.gameStatus[(0,0)] = gvar.myID
+		gvar.playerPos[gvar.myID].gvar = gvar
+		gvar.lock.release()
+	else:
+		for pp in gvar.clientPP.iteritems():
+			playerPos[pp[1][0]] = PlayerProfile(power = pp[1][1], groupID = pp[1][2], ip = pp[0][0], port = pp[0][1], ID = pp[1][0]
+		askGameStatus(gvar)
+		chooseInitGrid(gvar)
+		for other in gvar.playerPos:
+			if other != gvar.myID
+				gvar.myPainter.paintOther(other)
+			else:
+				gvar.myPainter.paintMyself(gvar)
+
+def askGameStatus(gvar):
 	print "Ask Game Status"
-	for x in iter(clientPP):
-		if (clientPP[x][2] == myGroup):	
+	for x in iter(gvar.clientPP):
+		if (gvar.clientPP[x][2] == gvar.myGroup):	
 			print "Ask Peer % {} {} About Game Status".format(x[0], x[1])
-			sendMsg(x[0], x[1], (1, myPort, myID, myGroup, myPower)) #Ask For Game Status
-	hasStatus.wait(10) # TimeOut = 10s
+			sendMsg(x[0], x[1], (1, gvar.myPort, gvar.myID, gvar.myGroup, gvar.myPower)) #Ask For Game Status
+	gvar.hasStatus.wait(10) # TODO TimeOut = 10s
 	print "Got Game Status"
 
-def chooseInitGrid(myID, playerPos, gameStatus, lock, clientPP, myPort, myPower, myGroup, canMoveSignal):
+def chooseInitGrid(gvar):
 	print "Choose Init Grid"
-	for grid in gameStatus:
-		if gameStatus[grid] == -1:
+	for grid in gvar.gameStatus:
+		if gvar.gameStatus[grid] == -1:
 			print "choose {}".format(grid)
-			if canMove(myID, grid, playerPos, gameStatus, lock, clientPP, myPort, myPower, myGroup, canMoveSignal):
+			if canMove(grid, gvar): 
 				print "move to {}".format(grid)
 				break
 			else:
 				print "can not move"
-	if playerPos[myID].x == None:
+	if gvar.playerPos[myID].x == None:
 		print "Something's Wrong!"
-	playerPos[myID].playerPos = playerPos
-	playerPos[myID].gameStatus = gameStatus
-	playerPos[myID].lock = lock
-	playerPos[myID].clientPP = clientPP
-	playerPos[myID].canMoveSignal = canMoveSignal
+	playerPos[myID].gvar = gvar
 	print "Finish Putting Grid"
 
-def canMove(myID, grid, playerPos, gameStatus, lock, clientPP, myPort, myPower, myGroup, canMoveSignal):
-	owner = findOwer(grid, playerPos, gameStatus)
+def canMove(grid, gvar): 
+	owner = findOwer(grid, gvar.playerPos, gvar.gameStatus)
 	print "Owner of Grid:{} {}".format(grid, owner)
 	if owner == myID and gameStatus[grid] != -1:
 		print "I'm the Owner, and the grid already has someone else"
 		return False
 	if owner != -1 and owner != myID: # has owner, it's not myself
 		print "Send Request to Owner"
-		canMoveSignal.clear()
-		sendMsg(playerPos[owner].ip, playerPos[owner].port, (3, grid, myPort, myID, myPower, myGroup))
-		canMoveSignal.wait(10) #Timeout=10s
-		if (gameStatus[grid] == -3): #can move
+		gvar.canMoveSignal.clear()
+		sendMsg(gvar.playerPos[owner].ip, gvar.playerPos[owner].port, (3, grid, gvar.myPort, gvar.myID, gvar.myPower, gvar.myGroup))
+		gvar.canMoveSignal.wait(10) #Timeout=10s
+		if (gvar.gameStatus[grid] == -3): #can move
 			pass
 		else:
 			return False
 	print "Has Permission To Occupy"
-	lock.acquire()
-	multicastMove(myID, myPort, myPower, myGroup, grid, clientPP)
-	if (playerPos[myID].x != None):
-		gameStatus[(playerPos[myID].x, playerPos[myID].y)] = -1
-	playerPos[myID].x = grid[0]
-	playerPos[myID].y = grid[1]
-	gameStatus[grid] = myID
-	lock.release()
+	gvar.lock.acquire()
+	multicastMove(grid, gvar)
+	if (gvar.playerPos[gvar.myID].x != None):
+		gvar.gameStatus[(gvar.playerPos[gvar.myID].x, gvar.playerPos[gvar.myID].y)] = -1
+	gvar.playerPos[gvar.myID].x = grid[0]
+	gvar.playerPos[gvar.myID].y = grid[1]
+	gvar.gameStatus[grid] = gvar.myID
+	gvar.lock.release()
 	return True
 
 def findOwer(grid, playerPos, gameStatus):

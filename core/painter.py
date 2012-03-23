@@ -11,10 +11,8 @@ class MyPainter(QObject):
 		super(QObject, self).__init__()
 		self.gameBoard = gameBoard
 		self.playerPos = playerPos
-	
-	def connectSignal(self):
 		self.paintNewOtherSignal.connect(self.paintOther)
-		self.otherMoveSignal.connect(self.moveOther)
+                self.otherMoveSignal.connect(self.moveOther)
 	
 	def moveOther(self, ID):
 		print "PAINTER: Move Player{} Signal".format(ID)
@@ -30,9 +28,10 @@ class MyPainter(QObject):
 		self.playerPos[ID].pix.move(self.playerPos[ID].x * GRID_LEN, self.playerPos[ID].y * GRID_LEN)
 		self.playerPos[ID].pix.show()
 
-	def paintMyself(self, myProfile, gameStatus, lock):
+	def paintMyself(self, gvar):
 		print "PAINTER: Paint Myself"
-		myProfile.pix = PixelWidget(self.gameBoard)
+		myProfile = gvar.playerPos[gvar.myID]
+		myProfile.pix = PixelWidget(self.gameUI.gameBoard)
 		myProfile.pix.resize(GRID_LEN, GRID_LEN)
 		myProfile.pix.setAutoFillBackground(True)
 		myProfile.pix.setPalette(QPalette(QColor(MY_PIXEL_COLOR)))
