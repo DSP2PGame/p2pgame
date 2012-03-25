@@ -18,6 +18,6 @@ def newRegister(gvar):
 	gvar.playerPos[gvar.myID].groupID = received[2]
 	gvar.playerPos[gvar.myID].port = gvar.myPort
 	gvar.clientPP = received[3]
-	gvar.server.clientPP = clientPP
+	gvar.server.clientPP = gvar.clientPP
 	gvar.lock.release()
 

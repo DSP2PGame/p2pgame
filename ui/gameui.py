@@ -3,7 +3,6 @@ from PyQt4.QtCore import *
 from const import *
 from ui.exit import *
 from ui.board import *
-from core.exit import *
 
 class GameUI(QObject):
 	def __init__(self, argv):

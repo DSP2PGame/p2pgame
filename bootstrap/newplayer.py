@@ -1,4 +1,5 @@
 import SocketServer
+import threading
 from core.peer_server import *
 
 def getFreePort(gvar):
@@ -12,7 +13,7 @@ def getFreePort(gvar):
 		else:
 			break;
 	gvar.server.gvar = gvar
-	t = threading.Thread(target=peerRecThread, name = "PeerReceivingThread", kwargs={"server":server})
+	t = threading.Thread(target=peerRecThread, name = "PeerReceivingThread", kwargs={"server":gvar.server})
 	t.start()
 
 def peerRecThread(server):

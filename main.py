@@ -2,7 +2,7 @@ from bootstrap.server import *
 from bootstrap.newplayer import *
 from core.register import *
 from ui.gameui import *
-from core.global_variabble import *
+from core.global_variable import *
 import sys
 
 # start bootstrapping server and run forever if this is the boot process
@@ -16,7 +16,7 @@ gvar = GlobalVariable(gameUI)
 # Register @ Server
 getFreePort(gvar)
 newRegister(gvar)
-gameUI.setExitBeahvior(server)
+gameUI.setExitBehavior(gvar.server)
 
 putNewPlayerOnBoard(gvar)
 gameUI.showGameUI()

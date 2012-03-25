@@ -31,7 +31,7 @@ class MyPainter(QObject):
 	def paintMyself(self, gvar):
 		print "PAINTER: Paint Myself"
 		myProfile = gvar.playerPos[gvar.myID]
-		myProfile.pix = PixelWidget(self.gameUI.gameBoard)
+		myProfile.pix = PixelWidget(gvar.gameUI.gameBoard)
 		myProfile.pix.resize(GRID_LEN, GRID_LEN)
 		myProfile.pix.setAutoFillBackground(True)
 		myProfile.pix.setPalette(QPalette(QColor(MY_PIXEL_COLOR)))

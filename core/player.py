@@ -14,7 +14,8 @@ class PlayerProfile(object):
 		self.ID = ID
 
 def putNewPlayerOnBoard(gvar):
-	if len(gvar.clientPP == 0):
+	print "Start Put New Player On Board"
+	if len(gvar.clientPP) == 0:
 		gvar.hasStatus.set()
 		gvar.lock.acquire()
 		gvar.playerPos[gvar.myID].x = 0
@@ -24,14 +25,14 @@ def putNewPlayerOnBoard(gvar):
 		gvar.lock.release()
 	else:
 		for pp in gvar.clientPP.iteritems():
-			playerPos[pp[1][0]] = PlayerProfile(power = pp[1][1], groupID = pp[1][2], ip = pp[0][0], port = pp[0][1], ID = pp[1][0]
+			gvar.playerPos[pp[1][0]] = PlayerProfile(power = pp[1][1], groupID = pp[1][2], ip = pp[0][0], port = pp[0][1], ID = pp[1][0])
 		askGameStatus(gvar)
 		chooseInitGrid(gvar)
-		for other in gvar.playerPos:
-			if other != gvar.myID
-				gvar.myPainter.paintOther(other)
-			else:
-				gvar.myPainter.paintMyself(gvar)
+	for other in gvar.playerPos:
+		if other != gvar.myID:
+			gvar.myPainter.paintOther(other)
+		else:
+			gvar.myPainter.paintMyself(gvar)
 
 def askGameStatus(gvar):
 	print "Ask Game Status"
@@ -52,18 +53,18 @@ def chooseInitGrid(gvar):
 				break
 			else:
 				print "can not move"
-	if gvar.playerPos[myID].x == None:
+	if gvar.playerPos[gvar.myID].x == None:
 		print "Something's Wrong!"
-	playerPos[myID].gvar = gvar
+	gvar.playerPos[gvar.myID].gvar = gvar
 	print "Finish Putting Grid"
 
 def canMove(grid, gvar): 
 	owner = findOwer(grid, gvar.playerPos, gvar.gameStatus)
 	print "Owner of Grid:{} {}".format(grid, owner)
-	if owner == myID and gameStatus[grid] != -1:
+	if owner == gvar.myID and gvar.gameStatus[grid] != -1:
 		print "I'm the Owner, and the grid already has someone else"
 		return False
-	if owner != -1 and owner != myID: # has owner, it's not myself
+	if owner != -1 and owner != gvar.myID: # has owner, it's not myself
 		print "Send Request to Owner"
 		gvar.canMoveSignal.clear()
 		sendMsg(gvar.playerPos[owner].ip, gvar.playerPos[owner].port, (3, grid, gvar.myPort, gvar.myID, gvar.myPower, gvar.myGroup))

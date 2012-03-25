@@ -20,8 +20,10 @@ class GlobalVariable(QObject):
 		self.server = None
 		self.myPort = None
 		self.clientPP = None
-		self.myPainter = MyPainter(self.gameUI.gameBoard, playerPos)
+		self.myPainter = MyPainter(self.gameUI.gameBoard, self.playerPos)
 
 		for i in xrange(0, NUM_GRID_PER_BOARD_ROW):
 		        for j in xrange(0, NUM_GRID_PER_BOARD_ROW):
 		                self.gameStatus[(i,j)] = -1 #unoccupied
+		
+		print "End of Init"
