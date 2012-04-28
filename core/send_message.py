@@ -27,6 +27,10 @@ def multicastMove_old(grid, gvar):
 				send_tcp_msg(conn, (6, grid))
 	gvar.lock.release()
 
+def send_tcp_msg_2(x, conn, data):
+	print "send to player {}".format(x)
+	send_tcp_msg(conn, data)
+
 def domultisend(grid, gvar):
 	print "Multicast Movement Msg"
 	gvar.lock.acquire()
@@ -36,7 +40,7 @@ def domultisend(grid, gvar):
 			conn = playerPos[x].conn
 			if conn is not None:
 				playerPos[x].last_stime = time.time()
-				send_tcp_msg(conn, (6, grid))
+				send_tcp_msg_2(x, conn, (6, grid))
 	gvar.lock.release()
 
 def multicastMove(grid, gvar):
