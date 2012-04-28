@@ -20,21 +20,25 @@ class PixelWidget(QWidget):
 		gvar = self.profile.gvar
 		if event.key() == Qt.Key_Down:
 			if checkRange(self.profile.y + 1) and canMove((self.profile.x, self.profile.y+1), gvar):
+				move_to_grid((self.profile.x, self.profile.y+1), gvar)
 				self.move(self.x(), self.checkBound(self.y() + GRID_LEN))
 			else:
 				self.cannotMove()
 		elif event.key() == Qt.Key_Up:
 			if checkRange(self.profile.y - 1) and canMove((self.profile.x, self.profile.y-1), gvar):
+				move_to_grid((self.profile.x, self.profile.y-1), gvar)
 				self.move(self.x(), self.checkBound(self.y() - GRID_LEN))
 			else:
 				self.cannotMove()
 		elif event.key() == Qt.Key_Left:
 			if checkRange(self.profile.x - 1) and canMove((self.profile.x - 1, self.profile.y), gvar):
+				move_to_grid((self.profile.x - 1, self.profile.y), gvar)
 				self.move(self.checkBound(self.x() - GRID_LEN), self.y())
 			else:
 				self.cannotMove()
 		elif event.key() == Qt.Key_Right:
 			if checkRange(self.profile.x + 1) and canMove((self.profile.x + 1, self.profile.y), gvar):
+				move_to_grid((self.profile.x + 1, self.profile.y), gvar)
 				self.move(self.checkBound(self.x() + GRID_LEN), self.y())
 			else:
 				self.cannotMove()

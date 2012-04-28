@@ -8,6 +8,7 @@ OTHER_PIXEL_COLOR = "pink"
 OWN_N = 2
 SERVER_HOST = "localhost" #"128.237.202.200" #"192.168.1.7"
 SERVER_PORT = 9999
+MAX_GROUP_MEMBER_NUM = 3
 
 def checkRange(x):
 	if (x >= 0 and x < NUM_GRID_PER_BOARD_ROW):

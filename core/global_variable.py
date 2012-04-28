@@ -16,9 +16,13 @@ class GlobalVariable(QObject):
 		self.playerPos = {}
 		self.myID = None
 		self.myGroup = None
-		self.myPower = None
-		self.server = None
+		self.gp_leader = None #group leader
+		self.gl_leader = None #global leader
 		self.myPort = None
+		self.server = None
+		self.server_thread = None
+		self.ps_thread = None
+		self.ss = None # tcp socket with bootstrapping server
 		self.clientPP = None
 		self.myPainter = MyPainter(self.gameUI.gameBoard, self.playerPos)
 

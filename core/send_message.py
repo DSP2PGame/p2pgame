@@ -1,16 +1,25 @@
 import socket
 import pickle
+import struct
 
-def sendMsg(ip, port, data):
-
-	print "Send Msg {} {} {}".format(ip, port, data[0])
-
-	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);
-	sock.sendto(pickle.dumps(data), (ip, port))
+# first send length, then send pickled data
+def send_tcp_msg(conn, data):
+	print "send to {} with data {}".format(conn, data)
+	try:
+		pdata = pickle.dumps(data)
+		plen = struct.pack("!i", len(pdata))
+		conn.sendall(plen)
+		conn.sendall(pdata)
+	except Exception, exc:
+		print "Exception: {} send tcp msg".format(exc)
 
 def multicastMove(grid, gvar):
-	
 	print "Multicast Movement Msg"
-
-	for x in gvar.clientPP:
-		sendMsg(x[0], x[1], (6, gvar.myPort, gvar.myID, gvar.myPower, gvar.myGroup, grid))
+	gvar.lock.acquire()
+	playerPos = gvar.playerPos
+	for x in playerPos.iterkeys():
+		if x != gvar.myID:
+			conn = playerPos[x].conn
+			if conn is not None:
+				send_tcp_msg(conn, (6, grid))
+	gvar.lock.release()

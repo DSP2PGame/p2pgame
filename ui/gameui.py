@@ -43,7 +43,7 @@ class GameUI(QObject):
 		self.mainWidget.show()
 		self.app.exec_()
 	
-	def setExitBehavior(self, server):
-		self.exitBehavior = ExitButtonBehavior(server, self.mainWidget)
+	def setExitBehavior(self, gvar):
+		self.exitBehavior = ExitButtonBehavior(gvar, self.mainWidget)
 		self.exitButton.clicked.connect(self.exitBehavior.clickExitButton)
 
