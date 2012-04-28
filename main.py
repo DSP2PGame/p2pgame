@@ -3,6 +3,7 @@ from bootstrap.newplayer import *
 from core.register import *
 from ui.gameui import *
 from core.global_variable import *
+from core.timer import *
 import sys
 import time
 
@@ -13,6 +14,7 @@ if len(sys.argv) > 1 and sys.argv[1] == "B":
 
 gameUI = GameUI(sys.argv)
 gvar = GlobalVariable(gameUI)
+gameUI.gvar = gvar
 
 # Register @ Server
 getFreePort(gvar)
@@ -25,4 +27,7 @@ start_send_hb(gvar)
 
 putNewPlayerOnBoard(gvar)
 #print gvar.clientPP
+if gvar.start_time is None: #first one
+	gvar.start_time = time.time()
+#start_timer(gvar)
 gameUI.showGameUI()

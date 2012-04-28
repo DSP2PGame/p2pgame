@@ -5,6 +5,7 @@ import socket
 import threading
 import time
 from core.send_message import *
+import sys
 
 def connect_player(gvar):
 	#gvar.lock.acquire()
@@ -110,11 +111,12 @@ def handle_ps_rcv(conn, gvar):
 				gvar.lock.release()
 			elif data[0] ==9: # (9, deadID) some player is offline
 				gvar.lock.acquire()
-				if data[1] == gvar.myID:
+				if data[1] == gvar.myID: # I need to die
 					gvar.lock.release()
 					while True:
 						print "network error. please restart game."
 						time.sleep(10)
+						sys.exit()
 				if data[1] in gvar.playerPos:
 					x = gvar.playerPos[data[1]].x
 					y = gvar.playerPos[data[1]].y
@@ -127,6 +129,7 @@ def handle_ps_rcv(conn, gvar):
 						temp_conn.close()
 					del gvar.clientPP[data[1]]
 					del gvar.playerPos[data[1]]
+					del gvar.score[data[1]]
 				else:
 					pass
 				calc_global_leader(gvar)

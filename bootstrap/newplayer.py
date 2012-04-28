@@ -81,6 +81,7 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 					last_atime = time.time()
 					#gvar.lock.acquire()
 					if ID not in gvar.clientPP:
+						gvar.score[ID] = 0
 						gvar.clientPP[ID] = (addr[0], port, groupID)
 						gvar.playerPos[ID] = PlayerProfile(ID = ID, groupID = groupID)
 						gvar.playerPos[ID].conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -101,10 +102,10 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 				if gvar.playerPos[ID].conn is None:
 					print "Error! No connection with player {}".format(ID)
 					break
-				send_tcp_msg(gvar.playerPos[ID].conn, (2, gvar.gameStatus))
+				send_tcp_msg(gvar.playerPos[ID].conn, (2, gvar.gameStatus, gvar.start_time, gvar.score))
 				#gvar.lock.release()
 				last_atime = time.time()
-			elif data[0] == 2: # (2, gameStatus)
+			elif data[0] == 2: # (2, gameStatus, start_time, score)
 				print "SERVER: receive game status"
 				if gvar.hasStatus.is_set():
 					print "SERVER: already got game statue"
@@ -112,6 +113,8 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 					print "SERVER: save game status and update game status"
 					gvar.lock.acquire()
 					updatePlayerPos(data[1], gvar.gameStatus, gvar.playerPos)
+					gvar.start_time = data[2]
+					gvar.score = data[3]
 					gvar.lock.release()
 					gvar.hasStatus.set()
 					print "SERVER: Got Game Status From player {}".format(ID)

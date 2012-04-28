@@ -25,6 +25,9 @@ class GlobalVariable(QObject):
 		self.ss = None # tcp socket with bootstrapping server
 		self.clientPP = None
 		self.myPainter = MyPainter(self.gameUI.gameBoard, self.playerPos)
+		self.start_time = None
+		self.can_move = True
+		self.score = {}
 
 		for i in xrange(0, NUM_GRID_PER_BOARD_ROW):
 		        for j in xrange(0, NUM_GRID_PER_BOARD_ROW):
