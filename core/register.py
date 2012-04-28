@@ -7,7 +7,7 @@ import time
 from core.send_message import *
 
 def connect_player(gvar):
-	gvar.lock.acquire()
+	#gvar.lock.acquire()
 	clientPP = gvar.clientPP
 	for key in clientPP.iterkeys():
 		if key != gvar.myID:
@@ -19,15 +19,15 @@ def connect_player(gvar):
 				print "Exception {}: Error can't connect player {}".format(exc, key)
 				player.conn = None
 			gvar.playerPos[key] = player
-	gvar.lock.release()
+	#gvar.lock.release()
 
 def send_comming_msg(gvar):
-	gvar.lock.acquire()
+	#gvar.lock.acquire()
 	playerPos = gvar.playerPos
 	for key in playerPos.iterkeys():
 		if key != gvar.myID and playerPos[key].conn is not None:
 			send_tcp_msg(playerPos[key].conn, (11, gvar.myID, gvar.myGroup, gvar.myPort))
-	gvar.lock.release()
+	#gvar.lock.release()
 	calc_global_leader(gvar)
 	calc_group_leader(gvar)
 
@@ -63,12 +63,12 @@ def handle_all_hb(gvar):
 			send_tcp_msg(gvar.ss, (8,))
 		elif gp == gvar.myID: # I'm not gl_leader, but I'm gp_leader, I'll send hb to gl_leader
 			time_itvl = time.time() - gvar.playerPos[gl].last_stime
-			if time_itvl > 0.8:
+			if time_itvl > 1:
 				send_tcp_msg(gvar.playerPos[gl].conn, (12,))
 				gvar.playerPos[gl].last_stime = time.time()
 		else: # I'm normal group member, I'll send hb to gp
 			time_itvl = time.time() - gvar.playerPos[gp].last_stime
-			if time_itvl > 0.8:
+			if time_itvl > 1:
 				send_tcp_msg(gvar.playerPos[gp].conn, (13,))
 				gvar.playerPos[gp].last_stime = time.time()
 		time.sleep(1)

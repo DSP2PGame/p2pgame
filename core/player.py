@@ -48,13 +48,14 @@ def putNewPlayerOnBoard(gvar):
 					break
 				else:
 					conn = gvar.playerPos[gvar.gl_leader].conn
+					gvar.lock.release()
 					if conn is not None:
 						send_tcp_msg(conn, (1,))
 			else: # ask group leader
 				conn = gvar.playerPos[gvar.gp_leader].conn
+				gvar.lock.release()
 				if conn is not None:
 					send_tcp_msg(conn, (1,))
-			gvar.lock.release()
 			if gvar.hasStatus.wait(3): #TODO
 				break
 			gvar.lock.acquire()

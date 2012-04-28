@@ -79,7 +79,7 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 					groupID = data[2]
 					port = data[3]
 					last_atime = time.time()
-					gvar.lock.acquire()
+					#gvar.lock.acquire()
 					if ID not in gvar.clientPP:
 						gvar.clientPP[ID] = (addr[0], port, groupID)
 						gvar.playerPos[ID] = PlayerProfile(ID = ID, groupID = groupID)
@@ -91,18 +91,18 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 						send_tcp_msg(gvar.playerPos[ID].conn, (11, gvar.myID, gvar.myGroup, gvar.myPort))
 						calc_global_leader(gvar)
 						calc_group_leader(gvar)
-					gvar.lock.release()
+					#gvar.lock.release()
 			elif data[0] == 1: #(1,): ask for game status
 				if ID is None:
 					print "Error! No new commer msg first! Thread End!"
 					break
 				print "SERVER: receive game status request from ID{}".format(ID)
-				gvar.lock.acquire()
+				#gvar.lock.acquire()
 				if gvar.playerPos[ID].conn is None:
 					print "Error! No connection with player {}".format(ID)
 					break
 				send_tcp_msg(gvar.playerPos[ID].conn, (2, gvar.gameStatus))
-				gvar.lock.release()
+				#gvar.lock.release()
 				last_atime = time.time()
 			elif data[0] == 2: # (2, gameStatus)
 				print "SERVER: receive game status"
@@ -118,7 +118,7 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 				last_atime = time.time()
 			elif data[0] == 3: #(3, grid): receive a request for a grid,
 				print "SERVER: receive a request for a grid {} from player {}".format(data[1], ID)
-				gvar.lock.acquire()
+				#gvar.lock.acquire()
 				if (gvar.gameStatus[data[1]] == -1): #-1: no one
 					print "SERVER: no one occupy the grid, send approval"
 					gvar.gameStatus[data[1]] = -2 # -2: reserve for someone
@@ -126,13 +126,13 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 				else:
 					print "SERVER: someone occupy the grid, send refusal"
 					send_tcp_msg(gvar.playerPos[ID].conn, (5,)) # refusal
-				gvar.lock.release()
+				#gvar.lock.release()
 				last_atime = time.time()
 			elif data[0] == 4: # (4, grid) approval
 				print "SERVER: got approval for grid{}".format(data[1])
-				gvar.lock.acquire()
+				#gvar.lock.acquire()
 				gvar.gameStatus[data[1]] = -3
-				gvar.lock.release()
+				#gvar.lock.release()
 				gvar.canMoveSignal.set()
 				last_atime = time.time()
 			elif data[0] == 5: # (5,) refusal 
@@ -141,7 +141,7 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 				last_atime = time.time()
 			elif data[0] == 6: # (6, grid) movement
 				print "SERVER: player {} move to grid {}".format(ID, data[1])
-				gvar.lock.acquire()
+				#gvar.lock.acquire()
 				if gvar.playerPos[ID].x is None:
 					gvar.gameStatus[data[1]] = ID
 					gvar.playerPos[ID].x = data[1][0]
@@ -153,7 +153,7 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 					gvar.playerPos[ID].x = data[1][0]
 					gvar.playerPos[ID].y = data[1][1]
 					gvar.myPainter.otherMoveSignal.emit(ID)
-				gvar.lock.release()
+				#gvar.lock.release()
 				last_atime = time.time()
 			elif data[0] == 12: #(12,) group leader send hb to global leader
 				print "heart beat from {} to global leader {}".format(ID, gvar.myID)
