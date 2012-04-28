@@ -1,6 +1,6 @@
 from core.player import *
 from const import *
-import pickle
+import cPickle as pickle
 import socket
 import threading
 import time
@@ -28,6 +28,13 @@ def send_comming_msg(gvar):
 		if key != gvar.myID and playerPos[key].conn is not None:
 			send_tcp_msg(playerPos[key].conn, (11, gvar.myID, gvar.myGroup, gvar.myPort))
 	gvar.lock.release()
+	calc_global_leader(gvar)
+	calc_group_leader(gvar)
+
+def start_send_hb(gvar):
+	gvar.hb_thread = threading.Thread(target = handle_all_hb, kwargs = {"gvar":gvar})
+	gvar.hb_thread.daemon = True
+	gvar.hb_thread.start()
 
 def newRegister(gvar):
 	print "connect to Server & send register msg to server & receive clientPP, id, groupid"
@@ -41,11 +48,30 @@ def newRegister(gvar):
 	gvar.ps_thread = threading.Thread(target = handle_ps_rcv, kwargs = {"conn":sock, "gvar":gvar})
 	gvar.ps_thread.daemon = True
 	gvar.ps_thread.start()
+
 	print "send register request to server"
-	#time.sleep(1)
 	send_tcp_msg(sock, (0, gvar.myPort))
 	print "wait server to reply"
 	time.sleep(1)
+
+def handle_all_hb(gvar):
+	while True:
+		gl = gvar.gl_leader
+		gp = gvar.gp_leader
+		#print "global {}, group {}".format(gl, gp)	
+		if gl == gvar.myID: # I'm global leader, I'll send hb to server
+			send_tcp_msg(gvar.ss, (8,))
+		elif gp == gvar.myID: # I'm not gl_leader, but I'm gp_leader, I'll send hb to gl_leader
+			time_itvl = time.time() - gvar.playerPos[gl].last_stime
+			if time_itvl > 0.8:
+				send_tcp_msg(gvar.playerPos[gl].conn, (12,))
+				gvar.playerPos[gl].last_stime = time.time()
+		else: # I'm normal group member, I'll send hb to gp
+			time_itvl = time.time() - gvar.playerPos[gp].last_stime
+			if time_itvl > 0.8:
+				send_tcp_msg(gvar.playerPos[gp].conn, (13,))
+				gvar.playerPos[gp].last_stime = time.time()
+		time.sleep(1)
 
 def handle_ps_rcv(conn, gvar):
 	conn.settimeout(100) #TODO

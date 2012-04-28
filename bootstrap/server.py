@@ -1,6 +1,6 @@
 import socket 
 import struct 
-import pickle
+import cPickle as pickle
 import threading
 import time
 from const import *
@@ -69,7 +69,7 @@ def handleRcv(conn, addr):
 		#print "globalID: {}".format(globalID)
 		#print "groupNum: {}".format(groupNum)
 		#print "groupInfo: {}".format(groupInfo)
-		print "g_leader: {}".format(g_leader)
+		#print "g_leader: {}".format(g_leader)
 		#print "dead: {}".format(dead)
 		#print "----------------------------------------"
 		#server_lock.release()
@@ -102,7 +102,7 @@ def handleRcv(conn, addr):
 			while len(dead[ID]) > 0:
 				dead_id = dead[ID].pop(0)
 				send_tcp_msg(conn, (9, dead_id)) # send dead id
-				print dead_id, ID
+				#print dead_id, ID
 				if (dead_id == ID):
 					self_delete = True
 			if self_delete:
@@ -117,7 +117,7 @@ def handleRcv(conn, addr):
 			server_lock.release()
 		if data_len is None and len(buf) >= 4:
 			data_len = struct.unpack("!i", buf[:4])[0]
-			print data_len
+			#print data_len
 			buf = buf[4:]
 		if data_len is not None and len(buf) >= data_len:
 			data = pickle.loads(buf[:data_len])

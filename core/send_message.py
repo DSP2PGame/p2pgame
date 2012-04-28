@@ -1,10 +1,11 @@
 import socket
-import pickle
+import cPickle as pickle
 import struct
+import time
 
 # first send length, then send pickled data
 def send_tcp_msg(conn, data):
-	print "send to {} with data {}".format(conn, data)
+	#print "send to {} with data {}".format(conn, data)
 	try:
 		pdata = pickle.dumps(data)
 		plen = struct.pack("!i", len(pdata))
@@ -21,5 +22,6 @@ def multicastMove(grid, gvar):
 		if x != gvar.myID:
 			conn = playerPos[x].conn
 			if conn is not None:
+				playerPos[x].last_stime = time.time()
 				send_tcp_msg(conn, (6, grid))
 	gvar.lock.release()

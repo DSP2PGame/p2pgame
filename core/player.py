@@ -2,6 +2,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from core.send_message import *
 from const import *
+import time 
 
 class PlayerProfile(object):
 	def __init__(self, x = None, y = None, groupID = None, ID = None, conn = None):
@@ -10,6 +11,7 @@ class PlayerProfile(object):
 		self.groupID = groupID
 		self.ID = ID
 		self.conn = conn
+		self.last_stime = time.time()
 
 def calc_global_leader(gvar):
 	clientPP = gvar.clientPP
@@ -28,8 +30,6 @@ def calc_group_leader(gvar):
 def putNewPlayerOnBoard(gvar):
 	print "Start Put New Player On Board"
 	gvar.lock.acquire()
-	calc_global_leader(gvar)
-	calc_group_leader(gvar)
 	if len(gvar.clientPP) == 1: #only myself
 		gvar.hasStatus.set()
 		gvar.playerPos[gvar.myID].x = 0

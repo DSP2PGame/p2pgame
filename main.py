@@ -21,9 +21,8 @@ gameUI.setExitBehavior(gvar)
 time.sleep(1)
 connect_player(gvar)
 send_comming_msg(gvar)
+start_send_hb(gvar)
 
 putNewPlayerOnBoard(gvar)
-
-print gvar.clientPP
-
+#print gvar.clientPP
 gameUI.showGameUI()
