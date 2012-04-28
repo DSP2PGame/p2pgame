@@ -4,6 +4,7 @@ from core.register import *
 from ui.gameui import *
 from core.global_variable import *
 import sys
+import time
 
 # start bootstrapping server and run forever if this is the boot process
 if len(sys.argv) > 1 and sys.argv[1] == "B": 
@@ -16,7 +17,13 @@ gvar = GlobalVariable(gameUI)
 # Register @ Server
 getFreePort(gvar)
 newRegister(gvar)
-gameUI.setExitBehavior(gvar.server)
+gameUI.setExitBehavior(gvar)
+time.sleep(1)
+connect_player(gvar)
+send_comming_msg(gvar)
 
 putNewPlayerOnBoard(gvar)
+
+print gvar.clientPP
+
 gameUI.showGameUI()
