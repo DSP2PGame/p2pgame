@@ -3,7 +3,7 @@ from bootstrap.newplayer import *
 from core.register import *
 from ui.gameui import *
 from core.global_variable import *
-#from core.timer import *
+#from core.timer import * //commented by Marcus 4-28
 import sys
 import time
 
