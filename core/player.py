@@ -132,6 +132,8 @@ def updatePlayerPos(newStatus, gameStatus, playerPos):
 	print "Update GameStatus and PlayerPos"
 	for grid in newStatus:
 		gameStatus[grid] = newStatus[grid]
-		if newStatus[grid] != -1:
+		if newStatus[grid] >= 0:
 			playerPos[newStatus[grid]].x = grid[0]
 			playerPos[newStatus[grid]].y = grid[1]
+		elif newStatus[grid] == -3
+			gameStatus[grid] = -1

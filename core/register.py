@@ -85,7 +85,7 @@ def handle_ps_rcv(conn, gvar):
 			print "recv end"
 			if len(temp_buf) == 0: # server is shutdown
 				while True:
-					print "ERROR: server is shutdown, please restart game"
+					print "ERROR: your network is slow, server close your connection, please restart game"
 					time.sleep(10)
 			buf += temp_buf
 		except Exception, exc: # recv() time out

@@ -16,9 +16,10 @@ class GameUI(QObject):
 		self.exitButton = QPushButton("Exit")
 		self.gameBoard = BoardWidget(self.mainWidget)
 		
+		self.timer = QWidget()
+
 		# Feature Need To Be Implemented
 		self.target = QWidget()
-		self.timer = QWidget()
 		self.myScore = QWidget()
 		self.scoreBoard = QWidget()
 		# End
