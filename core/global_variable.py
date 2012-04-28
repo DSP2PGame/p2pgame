@@ -28,9 +28,21 @@ class GlobalVariable(QObject):
 		self.start_time = None
 		self.can_move = True
 		self.score = {}
+		self.form_db = []
+		self.form_id = None
+		self.new_form_id = None
 
 		for i in xrange(0, NUM_GRID_PER_BOARD_ROW):
 		        for j in xrange(0, NUM_GRID_PER_BOARD_ROW):
 		                self.gameStatus[(i,j)] = -1 #unoccupied
 		
 		print "End of Init"
+
+	def load_formation(self):
+		temp1 = ((0,0,0,0,0),(0,0,0,0,0),(0,0,1,0,0),(0,0,0,0,0),(0,0,0,0,0)) 
+		self.form_db.append(temp1)
+		temp2 = ((0,0,0,0,0),(0,0,0,0,0),(0,1,1,1,0),(0,0,0,0,0),(0,0,0,0,0)) 
+		self.form_db.append(temp2)
+		temp3 = ((0,0,0,0,0),(0,0,1,0,0),(0,1,1,1,0),(0,0,1,0,0),(0,0,0,0,0)) 
+		self.form_db.append(temp3)
+		#TODO

@@ -15,6 +15,28 @@ class BoardWidget(QWidget):
 			painter.drawLine(0, i, BOARD_LEN, i)
 		painter.end()
 
+class FormationWidget(QWidget):
+	def paintEvent(self, event):
+		painter = QPainter(self)
+		pen = QPen(QColor("black"))
+		painter.setPen(pen)
+		for i in xrange(0, FORM_LEN + 1, FORM_GRID_LEN):
+			painter.drawLine(i, 0, i, FORM_LEN)
+			painter.drawLine(0, i, FORM_LEN, i)
+		painter.end()
+	def draw_form(self, gvar):
+		shape = gvar.form_db[gvar.form_id]
+		for i in xrange(0, NUM_GRID_PER_FORM_ROW, 1):
+			for j in xrange(0, NUM_GRID_PER_FORM_ROW, 1):
+				if shape[i][j] == 1:
+					pix = QWidget(self)
+					pix.resize(FORM_GRID_LEN, FORM_GRID_LEN)
+					pix.setAutoFillBackground(True)
+					pix.setPalette(QPalette(QColor(FORM_PIXEL_COLOR)))
+					pix.setFocusPolicy(Qt.NoFocus)
+					pix.move(i * FORM_GRID_LEN, j * FORM_GRID_LEN)
+					pix.show()
+
 class PixelWidget(QWidget):
 	def keyPressEvent(self, event):
 		gvar = self.profile.gvar

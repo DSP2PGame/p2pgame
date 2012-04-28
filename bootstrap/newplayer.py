@@ -102,7 +102,7 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 				if gvar.playerPos[ID].conn is None:
 					print "Error! No connection with player {}".format(ID)
 					break
-				send_tcp_msg(gvar.playerPos[ID].conn, (2, gvar.gameStatus, gvar.start_time, gvar.score))
+				send_tcp_msg(gvar.playerPos[ID].conn, (2, gvar.gameStatus, gvar.start_time, gvar.score, gvar.form_id))
 				#gvar.lock.release()
 				last_atime = time.time()
 			elif data[0] == 2: # (2, gameStatus, start_time, score)
@@ -115,6 +115,7 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 					updatePlayerPos(data[1], gvar.gameStatus, gvar.playerPos)
 					gvar.start_time = data[2]
 					gvar.score = data[3]
+					gvar.form_id = data[4]
 					gvar.lock.release()
 					gvar.hasStatus.set()
 					print "SERVER: Got Game Status From player {}".format(ID)
@@ -164,3 +165,6 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 			elif data[0] == 13: #(13,) group member send hb to group leader
 				print "heart beat from {} to group leader {}".format(ID, gvar.myID)
 				last_atime = time.time()
+			elif data[0] == 14: #(14, form_id)
+				print "receive new form_id {}".format(data[1])
+				gvar.new_form_id = data[1]

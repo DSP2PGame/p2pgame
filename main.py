@@ -15,6 +15,7 @@ if len(sys.argv) > 1 and sys.argv[1] == "B":
 gameUI = GameUI(sys.argv)
 gvar = GlobalVariable(gameUI)
 gameUI.gvar = gvar
+gvar.load_formation()
 
 # Register @ Server
 getFreePort(gvar)
@@ -29,5 +30,8 @@ putNewPlayerOnBoard(gvar)
 #print gvar.clientPP
 if gvar.start_time is None: #first one
 	gvar.start_time = time.time()
+if gvar.form_id is None: #first one
+	choose_form_id(gvar)
+	gvar.form_id = gvar.new_form_id
 #start_timer(gvar)
 gameUI.showGameUI()

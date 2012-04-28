@@ -12,6 +12,7 @@ class PlayerProfile(object):
 		self.ID = ID
 		self.conn = conn
 		self.last_stime = time.time()
+		self.have_score = False
 
 def calc_global_leader(gvar):
 	clientPP = gvar.clientPP
@@ -35,6 +36,7 @@ def putNewPlayerOnBoard(gvar):
 		gvar.playerPos[gvar.myID].x = 0
 		gvar.playerPos[gvar.myID].y = 0
 		gvar.gameStatus[(0,0)] = gvar.myID
+		gvar.score[gvar.myID] = 0
 		gvar.lock.release()
 	else:
 		while True:
@@ -44,6 +46,7 @@ def putNewPlayerOnBoard(gvar):
 					gvar.playerPos[gvar.myID].x = 0
 					gvar.playerPos[gvar.myID].y = 0
 					gvar.gameStatus[(0,0)] = gvar.myID
+					gvar.score[gvar.myID] = 0
 					gvar.lock.release()
 					break
 				else:
