@@ -27,6 +27,7 @@ def send_comming_msg(gvar):
 	playerPos = gvar.playerPos
 	for key in playerPos.iterkeys():
 		if key != gvar.myID and playerPos[key].conn is not None:
+			print "send comming msg to {}".format(key)
 			send_tcp_msg(playerPos[key].conn, (11, gvar.myID, gvar.myGroup, gvar.myPort))
 	#gvar.lock.release()
 	calc_global_leader(gvar)
@@ -64,11 +65,13 @@ def handle_all_hb(gvar):
 			send_tcp_msg(gvar.ss, (8,))
 		elif gp == gvar.myID: # I'm not gl_leader, but I'm gp_leader, I'll send hb to gl_leader
 			time_itvl = time.time() - gvar.playerPos[gl].last_stime
+			print "stime_itvl:{}".format(time_itvl)
 			if time_itvl > 1:
 				send_tcp_msg(gvar.playerPos[gl].conn, (12,))
 				gvar.playerPos[gl].last_stime = time.time()
 		else: # I'm normal group member, I'll send hb to gp
 			time_itvl = time.time() - gvar.playerPos[gp].last_stime
+			print "stime_itvl:{}".format(time_itvl)
 			if time_itvl > 1:
 				send_tcp_msg(gvar.playerPos[gp].conn, (13,))
 				gvar.playerPos[gp].last_stime = time.time()
@@ -81,16 +84,15 @@ def handle_ps_rcv(conn, gvar):
 	print "start"
 	while True:
 		try:
-			print "recv start"
-			temp_buf = conn.recv(1024) #TODO
-			print "recv end"
+			temp_buf = conn.recv(1024)
 			if len(temp_buf) == 0: # server is shutdown
 				while True:
 					print "ERROR: your network is slow, server close your connection, please restart game"
-					time.sleep(10)
+					time.sleep(1)
 			buf += temp_buf
 		except Exception, exc: # recv() time out
-			print "Exception {} in handle Player Server Recv".format(exc)
+			pass
+			#print "Exception {} in handle Player Server Recv".format(exc)
 		if data_len is None and len(buf) >= 4:
 			data_len = struct.unpack("!i", buf[:4])[0]
 			print data_len
@@ -110,13 +112,13 @@ def handle_ps_rcv(conn, gvar):
 				gvar.clientPP = data[3]	
 				gvar.lock.release()
 			elif data[0] ==9: # (9, deadID) some player is offline
+				print "player {} is dead--------------------".format(data[1])
 				gvar.lock.acquire()
 				if data[1] == gvar.myID: # I need to die
 					gvar.lock.release()
 					while True:
 						print "network error. please restart game."
-						time.sleep(10)
-						sys.exit()
+						time.sleep(1)
 				if data[1] in gvar.playerPos:
 					x = gvar.playerPos[data[1]].x
 					y = gvar.playerPos[data[1]].y

@@ -13,20 +13,29 @@ class PlayerProfile(object):
 		self.conn = conn
 		self.last_stime = time.time()
 		self.have_score = False
+		self.last_atime = time.time()
 
 def calc_global_leader(gvar):
 	clientPP = gvar.clientPP
+	old_gl_leader = gvar.gl_leader
 	gvar.gl_leader = gvar.myID
 	for key in clientPP.iterkeys():
 		if gvar.gl_leader > key:
 			gvar.gl_leader = key
+	if old_gl_leader != gvar.gl_leader and 	gvar.gl_leader == gvar.myID:
+		for key in gvar.playerPos.iterkeys():
+			gvar.playerPos[key].last_atime = time.time()
 
 def calc_group_leader(gvar):
 	clientPP = gvar.clientPP
+	old_gp_leader = gvar.gp_leader
 	gvar.gp_leader = gvar.myID
 	for key in clientPP.iterkeys():
 		if gvar.gp_leader > key and clientPP[key][2] == gvar.myGroup:
 			gvar.gp_leader = key
+	if old_gp_leader != gvar.gp_leader and 	gvar.gp_leader == gvar.myID:
+		for key in gvar.playerPos.iterkeys():
+			gvar.playerPos[key].last_atime = time.time()
 
 def putNewPlayerOnBoard(gvar):
 	print "Start Put New Player On Board"
@@ -55,9 +64,11 @@ def putNewPlayerOnBoard(gvar):
 					if conn is not None:
 						send_tcp_msg(conn, (1,))
 			else: # ask group leader
+				print "ask group leader"
 				conn = gvar.playerPos[gvar.gp_leader].conn
 				gvar.lock.release()
 				if conn is not None:
+					print "send msg to group leader"
 					send_tcp_msg(conn, (1,))
 			if gvar.hasStatus.wait(3): #TODO
 				break

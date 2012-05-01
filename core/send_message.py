@@ -14,6 +14,7 @@ def send_tcp_msg(conn, data):
 		conn.sendall(pdata)
 	except Exception, exc:
 		print "Exception: {} send tcp msg".format(exc)
+		return exc
 
 def multicastMove_old(grid, gvar):
 	print "Multicast Movement Msg"
@@ -47,3 +48,7 @@ def multicastMove(grid, gvar):
 	temp = threading.Thread(target = domultisend, kwargs = {"grid":grid, "gvar":gvar})
 	temp.daemon = True
 	temp.start()
+
+def multiast_leave_msg(gvar, ID):
+	for key in gvar.playerPos.iterkeys():
+		

@@ -12,6 +12,7 @@ globalID = 0
 groupNum = 0
 groupInfo = {}
 g_leader = None 
+leader_atime = None
 dead = {} 
 server_lock = threading.Lock()
 
@@ -52,15 +53,16 @@ def find_new_gleader():
 	for key in serverPP.iterkeys():
 		if g_leader is None or g_leader > key:
 			g_leader = key
+	if g_leader is not None:
+		leader_atime = time.time()
 
 def handleRcv(conn, addr):
-	global g_leader, dead, serverPP, groupInfo, server_lock
-	conn.settimeout(1) # TODO
+	global g_leader, dead, serverPP, groupInfo, server_lock, leader_atime
+	conn.settimeout(2) # TODO
 	buf = ""
 	data_len = None
 	ID = None
 	groupID = None
-	last_atime = None
 	while True:
 
 		#server_lock.acquire()
@@ -74,35 +76,12 @@ def handleRcv(conn, addr):
 		#print "----------------------------------------"
 		#server_lock.release()
 
-		try:
-			temp_buf = conn.recv(1024) #TODO
-			if len(temp_buf) == 0: # remote socket is closed
-				server_lock.acquire()
-				if ID is None: # player not enter yet, just throw out this thread
-					server_lock.release()
-					break	
-				print "ID: {} is disconnect".format(ID)
-				multicast_dead_player(ID)
-				server_lock.release()
-			buf += temp_buf 
-		except Exception, exc:
-			print "Exception: {}".format(exc)
-			if ID is not None:
-				server_lock.acquire()
-				if g_leader == ID:
-					time_itvl = time.time() - last_atime
-					if time_itvl > 500: #TODO
-						multicast_dead_player(ID)
-						print "group leader {} is time out".format(ID)
-				server_lock.release()
 		if ID is not None and len(dead[ID]) > 0:
 			server_lock.acquire()
-			last_atime = time.time()
 			self_delete = False
 			while len(dead[ID]) > 0:
 				dead_id = dead[ID].pop(0)
 				send_tcp_msg(conn, (9, dead_id)) # send dead id
-				#print dead_id, ID
 				if (dead_id == ID):
 					self_delete = True
 			if self_delete:
@@ -115,6 +94,28 @@ def handleRcv(conn, addr):
 				server_lock.release()
 				break
 			server_lock.release()
+
+		try:
+			temp_buf = conn.recv(1024)
+			if len(temp_buf) == 0: # remote socket is closed
+				server_lock.acquire()
+				if ID is None: # player not enter yet, just throw out this thread
+					server_lock.release()
+					break	
+				print "ID: {} is disconnect".format(ID)
+				multicast_dead_player(ID)
+				server_lock.release()
+			buf += temp_buf 
+		except Exception, exc:
+			#print "Exception: {}".format(exc)
+			if ID is not None:
+				server_lock.acquire()
+				if g_leader == ID:
+					time_itvl = time.time() - leader_atime
+					if time_itvl > 3: #TODO
+						multicast_dead_player(ID)
+						print "group leader {} is time out".format(ID)
+				server_lock.release()
 		if data_len is None and len(buf) >= 4:
 			data_len = struct.unpack("!i", buf[:4])[0]
 			#print data_len
@@ -130,27 +131,28 @@ def handleRcv(conn, addr):
 				serverPP[ID] = (addr[0], data[1], groupID)	
 				send_tcp_msg(conn, (7, ID, groupID, serverPP)) # 7: server returns register response
 				dead[ID] = []
-				last_atime = time.time()
 				if g_leader is None:
 					g_leader = ID
+					leader_atime = time.time()
 				print "new player from ip:{}, assign id:{}, groupid:{}".format(addr[0], ID, groupID)
 				server_lock.release()
 			elif data[0] == 8: # group leader heart beat; data=(8,)
-				if last_atime is None:
+				if ID != g_leader:
 					print "SERVER: client sends msg wrongly!!!"
-				last_atime = time.time()
-				print "group leader {} heart beat".format(ID)
+				leader_atime = time.time()
+				#print "group leader {} heart beat".format(ID)
 			elif data[0] == 10: # report dead id; data=(10, ID)
 				server_lock.acquire()
 				multicast_dead_player(data[1])
-				last_atime = time.time()
+				if ID == g_leader:
+					leader_atime = time.time()
 				print "player {} report player {} is dead".format(ID, data[1])
 				server_lock.release()
 
 def startServer():
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind(("", SERVER_PORT))
-	s.listen(1) #TODO
+	s.listen(1) 
 
 	while True:
 		conn, addr = s.accept()
