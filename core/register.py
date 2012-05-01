@@ -120,12 +120,12 @@ def handle_ps_rcv(conn, gvar):
 						print "network error. please restart game."
 						time.sleep(1)
 				if data[1] in gvar.playerPos:
+					gvar.playerPos[data[1]].pix.hide()
+					gvar.playerPos[data[1]].pix.deleteLater()
 					x = gvar.playerPos[data[1]].x
 					y = gvar.playerPos[data[1]].y
 					if x is not None:
 						gvar.gameStatus[(x, y)] = -1	
-						gvar.playerPos[data[1]].pix.hide()
-						gvar.playerPos[data[1]].pix.deleteLater()
 					temp_conn = gvar.playerPos[data[1]].conn
 					if temp_conn is not None:
 						temp_conn.close()

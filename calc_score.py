@@ -41,7 +41,7 @@ def calc_score(gvar):
 	# show my new score
 	print str(gvar.score)
 	print str(gvar.myID)
-	my_score.setText("My Score: {}".format(gvar.score[gvar.myID]))
+	my_score.setText("My Score(Player {}): {}".format(gvar.myID, gvar.score[gvar.myID]))
 
 	# show ranking board
 	rank = calc_rank_board(gvar)

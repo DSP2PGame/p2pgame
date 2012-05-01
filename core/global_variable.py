@@ -39,8 +39,8 @@ class GlobalVariable(QObject):
 		print "End of Init"
 
 	def load_formation(self):
-		temp1 = ((0,0,0,0,0),(0,0,0,0,0),(0,0,1,0,0),(0,0,0,0,0),(0,0,0,0,0)) 
-		self.form_db.append(temp1)
+		#temp1 = ((0,0,0,0,0),(0,0,0,0,0),(0,0,1,0,0),(0,0,0,0,0),(0,0,0,0,0)) 
+		#self.form_db.append(temp1)
 		temp2 = ((0,0,0,0,0),(0,0,0,0,0),(0,1,1,1,0),(0,0,0,0,0),(0,0,0,0,0)) 
 		self.form_db.append(temp2)
 		temp3 = ((0,0,0,0,0),(0,0,1,0,0),(0,1,1,1,0),(0,0,1,0,0),(0,0,0,0,0)) 

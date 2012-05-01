@@ -26,7 +26,7 @@ class GameUI(QObject):
 		self.timerCheck.start(100)
 
 		self.myScore = QLabel()
-		self.myScore.setText("My Score: 0")
+		self.myScore.setText("")
 
 		self.scoreBoard = QLabel()
 		self.scoreBoard.setText("Score Board\nMyself:\t0\nOther One:\t100\n")
@@ -56,8 +56,8 @@ class GameUI(QObject):
 	def updateTimer(self):
 		last = int(time.time() - self.gvar.start_time)
 		shown_num = None
-		if last >= 15:
-			self.gvar.start_time += 15
+		if last >= 12:
+			self.gvar.start_time += 12
 			show_num = 10
 			self.gvar.can_move = True
 			self.calc_score = False
@@ -81,7 +81,7 @@ class GameUI(QObject):
 			self.sideLayout.addRow(self.target)
 		elif last >= 10:
 			self.gvar.can_move = False
-			shown_num = 15 - last 
+			shown_num = 12 - last 
 			if not self.calc_score:
 				self.gvar.lock.acquire()
 				self.calc_score = True
