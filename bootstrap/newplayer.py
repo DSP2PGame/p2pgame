@@ -107,10 +107,10 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 					form_id = gvar.new_form_id
 				else:
 					form_id = gvar.form_id
-				send_tcp_msg(gvar.playerPos[ID].conn, (2, gvar.gameStatus, gvar.start_time, gvar.score, form_id, gvar.gameUI.calc_score))
+				send_tcp_msg(gvar.playerPos[ID].conn, (2, gvar.gameStatus, gvar.start_time, gvar.score, form_id, gvar.gameUI.calc_score, time.time()))
 				gvar.lock.release()
 				gvar.playerPos[ID].last_atime = time.time()
-			elif data[0] == 2: # (2, gameStatus, start_time, score, form_id, is_calc_score)
+			elif data[0] == 2: # (2, gameStatus, start_time, score, form_id, is_calc_score, their_ctime)
 				print "SERVER: receive game status"
 				if gvar.hasStatus.is_set():
 					print "SERVER: already got game statue"
@@ -118,7 +118,7 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 					print "SERVER: save game status and update game status"
 					gvar.lock.acquire()
 					updatePlayerPos(data[1], gvar.gameStatus, gvar.playerPos)
-					gvar.start_time = data[2]
+					gvar.start_time = data[2] + time.time() - data[6]
 					gvar.score = data[3]
 					gvar.new_form_id = data[4]
 					gvar.form_id = data[4]
