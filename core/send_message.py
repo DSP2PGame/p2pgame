@@ -50,5 +50,5 @@ def multicastMove(grid, gvar):
 	temp.start()
 
 def multiast_leave_msg(gvar, ID):
-	for key in gvar.playerPos.iterkeys():
+	pass
 		
