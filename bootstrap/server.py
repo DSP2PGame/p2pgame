@@ -48,7 +48,7 @@ def multicast_dead_player(ID):
 		dead[key].append(ID)
 
 def find_new_gleader():
-	global g_leader, serverPP
+	global g_leader, serverPP, leader_atime
 	g_leader = None
 	for key in serverPP.iterkeys():
 		if g_leader is None or g_leader > key:
@@ -112,7 +112,7 @@ def handleRcv(conn, addr):
 				server_lock.acquire()
 				if g_leader == ID:
 					time_itvl = time.time() - leader_atime
-					if time_itvl > 3: #TODO
+					if time_itvl > 5: #TODO
 						multicast_dead_player(ID)
 						print "group leader {} is time out".format(ID)
 				server_lock.release()

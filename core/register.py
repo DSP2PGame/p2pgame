@@ -65,13 +65,13 @@ def handle_all_hb(gvar):
 			send_tcp_msg(gvar.ss, (8,))
 		elif gp == gvar.myID: # I'm not gl_leader, but I'm gp_leader, I'll send hb to gl_leader
 			time_itvl = time.time() - gvar.playerPos[gl].last_stime
-			print "stime_itvl:{}".format(time_itvl)
+		#	print "stime_itvl:{}".format(time_itvl)
 			if time_itvl > 1:
 				send_tcp_msg(gvar.playerPos[gl].conn, (12,))
 				gvar.playerPos[gl].last_stime = time.time()
 		else: # I'm normal group member, I'll send hb to gp
 			time_itvl = time.time() - gvar.playerPos[gp].last_stime
-			print "stime_itvl:{}".format(time_itvl)
+		#	print "stime_itvl:{}".format(time_itvl)
 			if time_itvl > 1:
 				send_tcp_msg(gvar.playerPos[gp].conn, (13,))
 				gvar.playerPos[gp].last_stime = time.time()

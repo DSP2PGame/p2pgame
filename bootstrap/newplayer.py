@@ -59,11 +59,9 @@ def handle_peer_rcv(conn, addr, gvar): # handle msg between players
 		gp = gvar.gp_leader
 		if ID is not None and (gvar.myID == gl and is_group_leader(ID, gvar) or gvar.myID == gp and groupID == gvar.myGroup) : 
 			time_itvl = time.time() - gvar.playerPos[ID].last_atime 
-			if time_itvl > 3: 
+			if time_itvl > 5: 
 				print "tell server player {} is dead".format(ID)
 				exc = send_tcp_msg(gvar.ss, (10, ID))
-				if exc is not None: # server is down
-					multicast_leave_msg(gvar, ID)
 		if data_len is None and len(buf) >= 4:
 			data_len = struct.unpack("!i", buf[:4])[0]
 			buf = buf[4:]

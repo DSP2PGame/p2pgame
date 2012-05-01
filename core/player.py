@@ -22,9 +22,10 @@ def calc_global_leader(gvar):
 	for key in clientPP.iterkeys():
 		if gvar.gl_leader > key:
 			gvar.gl_leader = key
-	if old_gl_leader != gvar.gl_leader and 	gvar.gl_leader == gvar.myID:
+	if gvar.gl_leader == gvar.myID:
 		for key in gvar.playerPos.iterkeys():
 			gvar.playerPos[key].last_atime = time.time()
+	print "GL: {}".format(gvar.gl_leader)
 
 def calc_group_leader(gvar):
 	clientPP = gvar.clientPP
@@ -33,9 +34,10 @@ def calc_group_leader(gvar):
 	for key in clientPP.iterkeys():
 		if gvar.gp_leader > key and clientPP[key][2] == gvar.myGroup:
 			gvar.gp_leader = key
-	if old_gp_leader != gvar.gp_leader and 	gvar.gp_leader == gvar.myID:
+	if gvar.gp_leader == gvar.myID:
 		for key in gvar.playerPos.iterkeys():
 			gvar.playerPos[key].last_atime = time.time()
+	print "GP: {}".format(gvar.gp_leader)
 
 def putNewPlayerOnBoard(gvar):
 	print "Start Put New Player On Board"
