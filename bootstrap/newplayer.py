@@ -111,10 +111,9 @@ class peer_msg_handler(QObject):
 					exc = send_tcp_msg(self.gvar.ss, (10, self.ID))
 	
 	def handle(self, s):
-		if self.ID not in self.gvar.playerPos:
-			return
 		data = pickle.loads(str(s))
-		print 'handle', data
+		if self.ID is not None and self.ID not in self.gvar.playerPos and data[0] != 11:
+			return
 		if True:
 			if data[0] == 11: # (11, id, groupid, port): new comer
 				if self.ID is not None:

@@ -17,16 +17,10 @@ def connect_player(gvar):
 	calc_global_leader(gvar)
 	calc_group_leader(gvar)
 
-def start_send_hb(gvar):
-	gvar.hb_thread = threading.Thread(target = handle_all_hb, kwargs = {"gvar":gvar})
-	gvar.hb_thread.daemon = True
-	gvar.hb_thread.start()
-
 def make_send_hb_fun(gvar):
 	def send_hb():
 		gl = gvar.gl_leader
 		gp = gvar.gp_leader
-		#print "global {}, group {}".format(gl, gp)	
 		if gl == gvar.myID: # I'm global leader, I'll send hb to server
 			send_tcp_msg(gvar.ss, (8,))
 		elif gp == gvar.myID: # I'm not gl_leader, but I'm gp_leader, I'll send hb to gl_leader
@@ -44,74 +38,88 @@ def newRegister(gvar):
 	except Exception, exc:
 		print "ERROR: server is not started. {}".format(exc)
 	gvar.ss = sock
-	gvar.ps_thread = threading.Thread(target = handle_ps_rcv, kwargs = {"conn":sock, "gvar":gvar})
+
+	handler = server_thread_handler(gvar)
+	gvar.ps_thread = threading.Thread(target = handle_ps_rcv, kwargs = {"conn":sock, "handler":handler})
 	gvar.ps_thread.daemon = True
 	gvar.ps_thread.start()
 
 	print "send register request to server"
 	send_tcp_msg(sock, (0, gvar.myPort))
 	print "wait server to reply"
-	time.sleep(1)
+	while True: 
+		QCoreApplication.processEvents(QEventLoop.WaitForMoreEvents)
+		if gvar.serverResponse.is_set():
+			break
 
-def handle_ps_rcv(conn, gvar):
-	conn.settimeout(100) #TODO
+class server_thread_handler(QObject):
+	msg_received = pyqtSignal(str)
+
+	def __init__(self, gvar):
+		super(server_thread_handler, self).__init__()
+		self.msg_received.connect(self.handle)
+		self.gvar = gvar
+
+	def handle(self, s):
+		data = pickle.loads(str(s))	
+		if data[0] == 7: # (7, id, groupid, serverPP) this is my info
+			print "got server's reply {}".format(data)
+			self.gvar.myID = data[1]
+			self.gvar.myGroup = data[2]
+			self.gvar.playerPos[self.gvar.myID] = PlayerProfile(ID = self.gvar.myID, groupID = self.gvar.myGroup)
+			self.gvar.playerPos[self.gvar.myID].gvar = self.gvar
+			self.gvar.clientPP = data[3]	
+			self.gvar.serverResponse.set()
+		elif data[0] ==9: # (9, deadID) some player is offline
+			print "player {} is dead--------------------".format(data[1])
+			if data[1] == self.gvar.myID: # I need to die
+				return
+			if data[1] in self.gvar.playerPos:
+				self.gvar.playerPos[data[1]].pix.hide()
+				self.gvar.playerPos[data[1]].pix.deleteLater()
+				x = self.gvar.playerPos[data[1]].x
+				y = self.gvar.playerPos[data[1]].y
+				if x is not None:
+					self.gvar.gameStatus[(x, y)] = -1	
+				temp_conn = self.gvar.playerPos[data[1]].conn
+				if temp_conn is not None:
+					temp_conn.close()
+				del self.gvar.clientPP[data[1]]
+				del self.gvar.playerPos[data[1]]
+				del self.gvar.score[data[1]]
+			else:
+				pass
+			calc_global_leader(self.gvar)
+			calc_group_leader(self.gvar)
+			print "global leader: {}".format(self.gvar.gl_leader)
+			print "group_leader: {}".format(self.gvar.gp_leader)
+
+def handle_ps_rcv(conn, handler):
 	buf = ""
 	data_len = None
-	print "start"
 	while True:
 		try:
+			print "recv server msg start {}".format(len(buf))
 			temp_buf = conn.recv(1024)
 			if len(temp_buf) == 0: # server is shutdown
-				while True:
-					print "ERROR: your network is slow, server close your connection, please restart game"
-					time.sleep(1)
+				break
 			buf += temp_buf
+			print "recv server msg end {}".format(len(buf))
 		except Exception, exc: # recv() time out
 			pass
-			#print "Exception {} in handle Player Server Recv".format(exc)
-		if data_len is None and len(buf) >= 4:
-			data_len = struct.unpack("!i", buf[:4])[0]
-			print data_len
-			buf = buf[4:]
-		if data_len is not None and len(buf) >= data_len:
-			data = pickle.loads(buf[:data_len])
-			buf = buf[data_len:]
-			data_len = None
-
-			if data[0] == 7: # (7, id, groupid, serverPP) this is my info
-				print "got server's reply {}".format(data)
-				gvar.lock.acquire()
-				gvar.myID = data[1]
-				gvar.myGroup = data[2]
-				gvar.playerPos[gvar.myID] = PlayerProfile(ID = gvar.myID, groupID = gvar.myGroup)
-				gvar.playerPos[gvar.myID].gvar = gvar
-				gvar.clientPP = data[3]	
-				gvar.lock.release()
-			elif data[0] ==9: # (9, deadID) some player is offline
-				print "player {} is dead--------------------".format(data[1])
-				gvar.lock.acquire()
-				if data[1] == gvar.myID: # I need to die
-					gvar.lock.release()
-					while True:
-						print "network error. please restart game."
-						time.sleep(1)
-				if data[1] in gvar.playerPos:
-					gvar.playerPos[data[1]].pix.hide()
-					gvar.playerPos[data[1]].pix.deleteLater()
-					x = gvar.playerPos[data[1]].x
-					y = gvar.playerPos[data[1]].y
-					if x is not None:
-						gvar.gameStatus[(x, y)] = -1	
-					temp_conn = gvar.playerPos[data[1]].conn
-					if temp_conn is not None:
-						temp_conn.close()
-					del gvar.clientPP[data[1]]
-					del gvar.playerPos[data[1]]
-					del gvar.score[data[1]]
+		while True:
+			if data_len is None:
+				if len(buf) >= 4:
+					data_len = struct.unpack("!i", buf[:4])[0]
+					buf = buf[4:]
 				else:
-					pass
-				calc_global_leader(gvar)
-				calc_group_leader(gvar)
-				print "global leader: {}".format(gvar.gl_leader)
-				print "group_leader: {}".format(gvar.gp_leader)
-				gvar.lock.release()
+					break
+			else:
+				if len(buf) >= data_len:
+					data = buf[:data_len]
+					buf = buf[data_len:]
+					data_len = None
+					handler.msg_received.emit(data)
+					print "emit server msg"
+				else:
+					break

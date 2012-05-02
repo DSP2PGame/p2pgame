@@ -12,6 +12,8 @@ class GlobalVariable(QObject):
 		self.gameStatus = {}
 		self.hasStatus = threading.Event()
 		self.hasStatus.clear()
+		self.serverResponse = threading.Event()
+		self.serverResponse.clear()
 		self.canMoveSignal = threading.Event()
 		self.playerPos = {}
 		self.myID = None

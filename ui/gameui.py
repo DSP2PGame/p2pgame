@@ -6,9 +6,9 @@ from ui.board import *
 from calc_score import *
 
 class GameUI(QObject):
-	def __init__(self, argv):
+	def __init__(self, app):
 		super(GameUI, self).__init__()
-		self.app = QApplication(argv)
+		self.app = app 
 		self.gvar = None
 		self.calc_score = False
 
@@ -96,7 +96,6 @@ class GameUI(QObject):
 		rank = calc_rank_board(self.gvar)
 		self.scoreBoard.setText("\n".join(rank))
 		self.mainWidget.show()
-		self.app.exec_()
 	
 	def setExitBehavior(self, gvar):
 		self.exitBehavior = ExitButtonBehavior(gvar, self.mainWidget)

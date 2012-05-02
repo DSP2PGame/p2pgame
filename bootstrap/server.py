@@ -31,16 +31,6 @@ def assignGroupID():
 	groupNum += 1
 	return groupNum - 1
 
-# first send length, then send pickled data
-#def send_tcp_msg(conn, data):
-#	try:
-#		pdata = pickle.dumps(data)
-#		plen = struct.pack("!i", len(pdata))
-#		conn.sendall(plen)
-#		conn.sendall(pdata)
-#	except:
-#		pass
-
 def multicast_dead_player(ID):
 	global serverPP, dead
 	print serverPP, type(serverPP)

@@ -11,17 +11,16 @@ if len(sys.argv) > 1 and sys.argv[1] == "B":
 	print "Server Start"
 	startServer()
 
-gameUI = GameUI(sys.argv)
+app = QApplication(sys.argv)
+gameUI = GameUI(app)
 gvar = GlobalVariable(gameUI)
 gameUI.gvar = gvar
 gvar.load_formation()
-
 
 # Register @ Server
 getFreePort(gvar)
 newRegister(gvar)
 gameUI.setExitBehavior(gvar)
-time.sleep(1)
 connect_player(gvar)
 
 hb_timer = QTimer()
@@ -37,3 +36,4 @@ if gvar.form_id is None: #first one
 	gvar.form_id = gvar.new_form_id
 #start_timer(gvar)
 gameUI.showGameUI()
+app.exec_()

@@ -26,8 +26,10 @@ class socket_wrapper():
 	
 	def send_msg(self, data):
 		if self.conn.state() != QAbstractSocket.ConnectedState:
+			print "append data {}".format(data)
 			self.buf.append(data)
 		else:
+			print "write data {}".format(data)
 			self.write_msg(data)
 
 	def write_msg(self, data):
@@ -38,6 +40,7 @@ class socket_wrapper():
 		self.conn.flush()
 
 	def reconnect(self):
+		print "reconnect"
 		self.conn = QTcpSocket()
 		self.conn.connectToHost(self.addr[0], self.addr[1])
 		self.conn.connected.connect(self.flush)
@@ -47,6 +50,7 @@ class socket_wrapper():
 		self.write_msg(self.init_msg)
 		while len(self.buf) > 0:
 			data = self.buf.pop(0)
+			print "flush", data
 			self.write_msg(data)
 	
 	def close(self):
