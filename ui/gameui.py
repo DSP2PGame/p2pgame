@@ -7,7 +7,7 @@ from calc_score import *
 
 class GameUI(QObject):
 	def __init__(self, argv):
-		super(QObject, self).__init__()
+		super(GameUI, self).__init__()
 		self.app = QApplication(argv)
 		self.gvar = None
 		self.calc_score = False

@@ -51,9 +51,8 @@ def calc_score(gvar):
 	if gvar.gl_leader == gvar.myID:
 		choose_form_id(gvar)
 		for ID in gvar.playerPos.iterkeys():
-			conn = gvar.playerPos[ID].conn
-			if conn is not None:
-				send_tcp_msg(conn, (14, gvar.new_form_id))
+			if gvar.playerPos[ID].conn is not None:
+				gvar.playerPos[ID].conn.send_msg((14, gvar.new_form_id))
 
 def calc_rank_board(gvar):
 	rank = ["Score Board",]

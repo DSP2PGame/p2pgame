@@ -40,63 +40,57 @@ def calc_group_leader(gvar):
 	print "GP: {}".format(gvar.gp_leader)
 
 def putNewPlayerOnBoard(gvar):
-	print "Start Put New Player On Board"
-	gvar.lock.acquire()
-	if len(gvar.clientPP) == 1: #only myself
+
+	def put_myself_to_00():
 		gvar.hasStatus.set()
 		gvar.playerPos[gvar.myID].x = 0
 		gvar.playerPos[gvar.myID].y = 0
 		gvar.gameStatus[(0,0)] = gvar.myID
 		gvar.score[gvar.myID] = 0
-		gvar.lock.release()
+		
+	print "Start Put New Player On Board"
+	if len(gvar.clientPP) == 1: #only myself
+		put_myself_to_00()
 	else:
 		while True:
 			if gvar.gp_leader == gvar.myID: #only me in my group, I should ask others like global leader
 				if gvar.gl_leader == gvar.myID: #only myself in game
-					gvar.hasStatus.set()
-					gvar.playerPos[gvar.myID].x = 0
-					gvar.playerPos[gvar.myID].y = 0
-					gvar.gameStatus[(0,0)] = gvar.myID
-					gvar.score[gvar.myID] = 0
-					gvar.lock.release()
+					put_myself_to_00()
 					break
 				else:
 					conn = gvar.playerPos[gvar.gl_leader].conn
-					gvar.lock.release()
-					if conn is not None:
-						send_tcp_msg(conn, (1,))
+					conn.send_msg((1,))
 			else: # ask group leader
 				print "ask group leader"
 				conn = gvar.playerPos[gvar.gp_leader].conn
-				gvar.lock.release()
-				if conn is not None:
-					print "send msg to group leader"
-					send_tcp_msg(conn, (1,))
-			if gvar.hasStatus.wait(3): #TODO
+				conn.send_msg((1,))
+			good = False
+			t = time.time()
+			while time.time() - t <= 3:
+				QCoreApplication.processEvents(QEventLoop.WaitForMoreEvents)
+				if gvar.hasStatus.is_set():
+					good = True
+					break
+			if good:
 				break
-			gvar.lock.acquire()
 			calc_global_leader(gvar)
 			calc_group_leader(gvar)
 		chooseInitGrid(gvar)
 
-	gvar.lock.acquire()
 	for p in gvar.playerPos.iterkeys():
 		if p != gvar.myID and gvar.playerPos[p].x is not None:
 			gvar.myPainter.paintOther(p)
 		else:
 			gvar.myPainter.paintMyself(gvar)
-	gvar.lock.release()
 
 def move_to_grid(grid, gvar):
 	print "Has Permission To Occupy"
 	multicastMove(grid, gvar)
-	gvar.lock.acquire()
 	if (gvar.playerPos[gvar.myID].x != None):
 		gvar.gameStatus[(gvar.playerPos[gvar.myID].x, gvar.playerPos[gvar.myID].y)] = -1
 	gvar.playerPos[gvar.myID].x = grid[0]
 	gvar.playerPos[gvar.myID].y = grid[1]
 	gvar.gameStatus[grid] = gvar.myID
-	gvar.lock.release()
 
 def chooseInitGrid(gvar):
 	print "Choose Init Grid"
@@ -125,11 +119,12 @@ def canMove(grid, gvar):
 		print "Send Request to Owner"
 		gvar.canMoveSignal.clear()
 		conn = gvar.playerPos[owner].conn
-		if conn is not None:
-			send_tcp_msg(conn, (3, grid))
-		else:
-			print "Error! can't connect to owner"
-		gvar.canMoveSignal.wait(3) #TODO
+		conn.send_msg((3, grid))
+		t = time.time()
+		while time.time() - t <= 3:
+			QCoreApplication.processEvents(QEventLoop.WaitForMoreEvents)
+			if gvar.canMoveSignal.is_set():
+				break
 		if (gvar.gameStatus[grid] == -3): #can move
 			pass
 		else:

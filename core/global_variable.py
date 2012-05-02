@@ -6,7 +6,7 @@ from core.painter import *
 
 class GlobalVariable(QObject):
 	def __init__(self, gameUI):
-		super(QObject, self).__init__()
+		super(GlobalVariable, self).__init__()
 		self.gameUI = gameUI
 		self.lock = threading.Lock()
 		self.gameStatus = {}

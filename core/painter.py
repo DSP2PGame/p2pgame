@@ -8,7 +8,7 @@ class MyPainter(QObject):
 	otherMoveSignal = pyqtSignal(int)
 
 	def __init__(self, gameBoard, playerPos):
-		super(QObject, self).__init__()
+		super(MyPainter, self).__init__()
 		self.gameBoard = gameBoard
 		self.playerPos = playerPos
 		self.paintNewOtherSignal.connect(self.paintOther)

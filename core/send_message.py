@@ -3,6 +3,7 @@ import cPickle as pickle
 import struct
 import time
 import threading
+from PyQt4.QtNetwork import *
 
 # first send length, then send pickled data
 def send_tcp_msg(conn, data):
@@ -16,39 +17,44 @@ def send_tcp_msg(conn, data):
 		print "Exception: {} send tcp msg".format(exc)
 		return exc
 
-def multicastMove_old(grid, gvar):
-	print "Multicast Movement Msg"
-	gvar.lock.acquire()
-	playerPos = gvar.playerPos
-	for x in playerPos.iterkeys():
-		if x != gvar.myID:
-			conn = playerPos[x].conn
-			if conn is not None:
-				playerPos[x].last_stime = time.time()
-				send_tcp_msg(conn, (6, grid))
-	gvar.lock.release()
+class socket_wrapper():
+	def __init__(self, addr, init_msg):
+		self.addr = addr
+		self.init_msg = init_msg
+		self.buf = []
+		self.reconnect()
+	
+	def send_msg(self, data):
+		if self.conn.state() != QAbstractSocket.ConnectedState:
+			self.buf.append(data)
+		else:
+			self.write_msg(data)
 
-def send_tcp_msg_2(x, conn, data):
-	print "send to player {}".format(x)
-	send_tcp_msg(conn, data)
+	def write_msg(self, data):
+		pdata = pickle.dumps(data)
+		plen = struct.pack("!i", len(pdata))
+		self.conn.write(plen)
+		self.conn.write(pdata)
+		self.conn.flush()
 
-def domultisend(grid, gvar):
-	print "Multicast Movement Msg"
-	gvar.lock.acquire()
-	playerPos = gvar.playerPos
-	for x in playerPos.iterkeys():
-		if x != gvar.myID:
-			conn = playerPos[x].conn
-			if conn is not None:
-				playerPos[x].last_stime = time.time()
-				send_tcp_msg_2(x, conn, (6, grid))
-	gvar.lock.release()
+	def reconnect(self):
+		self.conn = QTcpSocket()
+		self.conn.connectToHost(self.addr[0], self.addr[1])
+		self.conn.connected.connect(self.flush)
+		self.conn.error.connect(self.reconnect)
 
-def multicastMove(grid, gvar):
-	temp = threading.Thread(target = domultisend, kwargs = {"grid":grid, "gvar":gvar})
-	temp.daemon = True
-	temp.start()
-
-def multiast_leave_msg(gvar, ID):
-	pass
+	def flush(self):
+		self.write_msg(self.init_msg)
+		while len(self.buf) > 0:
+			data = self.buf.pop(0)
+			self.write_msg(data)
+	
+	def close(self):
+		self.conn.disconnectFromHost()
 		
+def multicastMove(grid, gvar):
+	print "Multicast Movement Msg"
+	playerPos = gvar.playerPos
+	for x in playerPos.iterkeys():
+		if x != gvar.myID:
+			playerPos[x].conn.send_msg((6, grid))

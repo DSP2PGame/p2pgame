@@ -1,9 +1,9 @@
 import socket
 import threading
-#from core.peer_server import *
 from core.send_message import *
 from core.player import *
 import time
+from Queue import *
 
 def getFreePort(gvar):
 	print "Get Port Number & Start Peer Server"
@@ -17,18 +17,34 @@ def getFreePort(gvar):
 			gvar.myPort += 1
 		else:
 			break;
-	s.listen(1) #TODO
+	s.listen(2)
 	gvar.server = s
-	gvar.server_thread = threading.Thread(target=peerRcvThread, kwargs={"s":gvar.server, "gvar":gvar})
+
+	p_handler = peer_recv_thread_handler(gvar)
+	gvar.server_thread = threading.Thread(target=peerRcvThread, kwargs={"s":gvar.server, "p_handler":p_handler})
 	gvar.server_thread.daemon = True
 	gvar.server_thread.start()
 
-def peerRcvThread(s, gvar):
-	while True:
-		conn, addr = s.accept()
-		myThread = threading.Thread(target = handle_peer_rcv, kwargs = {"conn":conn, "addr":addr, "gvar":gvar})
+class peer_recv_thread_handler(QObject):
+	conn_received = pyqtSignal()
+	def __init__(self, gvar):
+		super(peer_recv_thread_handler, self).__init__()
+		self.conn_received.connect(self.handle)
+		self.gvar = gvar
+		self.q = Queue()
+
+	def handle(self):
+		conn, addr = self.q.get()
+		handler = peer_msg_handler(self.gvar, addr)
+		myThread = threading.Thread(target = handle_peer_rcv, kwargs = {"conn":conn, "handler":handler})
 		myThread.daemon = True
 		myThread.start()
+
+def peerRcvThread(s, p_handler):
+	while True:
+		conn, addr = s.accept()
+		p_handler.q.put((conn, addr))
+		p_handler.conn_received.emit()
 
 def is_group_leader(ID, gvar):
 	clientPP = gvar.clientPP
@@ -36,141 +52,141 @@ def is_group_leader(ID, gvar):
 		if clientPP[ID][2] == clientPP[key][2] and ID > key:
 			return False
 	return True
-
-def handle_peer_rcv(conn, addr, gvar): # handle msg between players
-	conn.settimeout(2) #TODO
-	ID = None
-	groupID = None
-	port = None
+	
+def handle_peer_rcv(conn, handler): # handle msg between players
 	buf = ""
 	data_len = None
 	while True:
 		try:
+			print 'pre recv', len(buf)
 			tempbuf = conn.recv(1024)
 			if len(tempbuf) == 0: # the other side close connection
-				pass
+				break
 			buf += tempbuf
-		except Exception, exc: # time out
-			pass #TODO
-		if ID is not None and ID not in gvar.playerPos:
-			conn.close()
+			print 'post recv', len(buf)
+		except Exception, exc: # Error, exit 
 			break
-		gl = gvar.gl_leader
-		gp = gvar.gp_leader
-		if ID is not None and (gvar.myID == gl and is_group_leader(ID, gvar) or gvar.myID == gp and groupID == gvar.myGroup) : 
-			time_itvl = time.time() - gvar.playerPos[ID].last_atime 
-			if time_itvl > 5: 
-				print "tell server player {} is dead".format(ID)
-				exc = send_tcp_msg(gvar.ss, (10, ID))
-		if data_len is None and len(buf) >= 4:
-			data_len = struct.unpack("!i", buf[:4])[0]
-			buf = buf[4:]
-		if data_len is not None and len(buf) >= data_len:
-			data = pickle.loads(buf[:data_len])
-			buf = buf[data_len:]
-			data_len = None
+		
+		while True:
+			if data_len is None:
+				if len(buf) >= 4:
+					data_len = struct.unpack("!i", buf[:4])[0]
+					buf = buf[4:]
+				else:
+					break
+			else:
+				if len(buf) >= data_len:
+					data = buf[:data_len]
+					buf = buf[data_len:]
+					data_len = None
+					handler.msg_received.emit(data)
+					print 'emit msg_received'
+				else:
+					break
 
-			if data[0] == 11: # (11, id, groupid, port): new commer
-				if ID is not None:
-					print "Error! got multiple new commer from same client"
+class peer_msg_handler(QObject):
+	msg_received = pyqtSignal(str)
+	def __init__(self, gvar, addr):
+		super(peer_msg_handler, self).__init__()
+		self.msg_received.connect(self.handle)
+		self.addr = addr
+		self.ID = None
+		self.groupID = None
+		self.port = None
+		self.gvar = gvar
+		self.counter = 0
+		self.timer = QTimer()
+		self.timer.timeout.connect(self.handle_timer)
+		self.timer.start(1000) 
+
+	def handle_timer(self):
+		self.counter += 1
+		if self.counter >= 5: #time out
+			gl = self.gvar.gl_leader
+			gp = self.gvar.gp_leader
+			if self.ID is not None and ((self.gvar.myID == gl and is_group_leader(self.ID, self.gvar)) or (self.gvar.myID == gp and self.groupID == self.gvar.myGroup)): 
+				time_itvl = time.time() - self.gvar.playerPos[self.ID].last_atime 
+				if time_itvl > 5: 
+					print "tell server player {} is dead".format(self.ID)
+					exc = send_tcp_msg(self.gvar.ss, (10, self.ID))
+	
+	def handle(self, s):
+		if self.ID not in self.gvar.playerPos:
+			return
+		data = pickle.loads(str(s))
+		print 'handle', data
+		if True:
+			if data[0] == 11: # (11, id, groupid, port): new comer
+				if self.ID is not None:
+					print "Error! got multiple new comer from same client"
 				else:
-					ID = data[1]
-					groupID = data[2]
-					port = data[3]
-					#gvar.lock.acquire()
-					if ID not in gvar.clientPP:
-						gvar.score[ID] = 0
-						gvar.clientPP[ID] = (addr[0], port, groupID)
-						gvar.playerPos[ID] = PlayerProfile(ID = ID, groupID = groupID)
-						gvar.playerPos[ID].conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-						gvar.playerPos[ID].last_atime = time.time()
-						try:
-							gvar.playerPos[ID].conn.connect((addr[0], port))
-						except Exception, exc:
-							print "Exception {}: can't connect to player {}".format(exc, ID)
-						send_tcp_msg(gvar.playerPos[ID].conn, (11, gvar.myID, gvar.myGroup, gvar.myPort))
-						calc_global_leader(gvar)
-						calc_group_leader(gvar)
-					#gvar.lock.release()
+					self.ID = data[1]
+					self.groupID = data[2]
+					self.port = data[3]
+					if self.ID not in self.gvar.clientPP:
+						self.gvar.score[self.ID] = 0
+						self.gvar.clientPP[self.ID] = (self.addr[0], self.port, self.groupID)
+						self.gvar.playerPos[self.ID] = PlayerProfile(ID = self.ID, groupID = self.groupID)
+						self.gvar.playerPos[self.ID].conn = socket_wrapper((self.addr[0], self.port), (11, self.gvar.myID, self.gvar.myGroup, self.gvar.myPort))
+						calc_global_leader(self.gvar)
+						calc_group_leader(self.gvar)
 			elif data[0] == 1: #(1,): ask for game status
-				if ID is None:
-					print "Error! No new commer msg first! Thread End!"
-					break
-				print "SERVER: receive game status request from ID{}".format(ID)
-				gvar.lock.acquire()
-				if gvar.playerPos[ID].conn is None:
-					print "Error! No connection with player {}".format(ID)
-					break
-				if gvar.new_form_id is not None:
-					form_id = gvar.new_form_id
+				print "receive game status request from ID{}".format(self.ID)
+				if self.gvar.new_form_id is not None:
+					form_id = self.gvar.new_form_id
 				else:
-					form_id = gvar.form_id
-				send_tcp_msg(gvar.playerPos[ID].conn, (2, gvar.gameStatus, gvar.start_time, gvar.score, form_id, gvar.gameUI.calc_score, time.time()))
-				gvar.lock.release()
-				gvar.playerPos[ID].last_atime = time.time()
+					form_id = self.gvar.form_id
+				self.gvar.playerPos[self.ID].conn.send_msg((2, self.gvar.gameStatus, self.gvar.start_time, self.gvar.score, form_id, self.gvar.gameUI.calc_score, time.time()))
 			elif data[0] == 2: # (2, gameStatus, start_time, score, form_id, is_calc_score, their_ctime)
 				print "SERVER: receive game status"
-				if gvar.hasStatus.is_set():
+				if self.gvar.hasStatus.is_set():
 					print "SERVER: already got game statue"
 				else:
 					print "SERVER: save game status and update game status"
-					gvar.lock.acquire()
-					updatePlayerPos(data[1], gvar.gameStatus, gvar.playerPos)
-					gvar.start_time = data[2] + time.time() - data[6]
-					gvar.score = data[3]
-					gvar.new_form_id = data[4]
-					gvar.form_id = data[4]
-					gvar.gameUI.calc_score = data[5]
-					gvar.lock.release()
-					gvar.hasStatus.set()
-					print "SERVER: Got Game Status From player {}".format(ID)
-				gvar.playerPos[ID].last_atime = time.time()
+					updatePlayerPos(data[1], self.gvar.gameStatus, self.gvar.playerPos)
+					self.gvar.start_time = data[2] + time.time() - data[6]
+					self.gvar.score = data[3]
+					self.gvar.new_form_id = data[4]
+					self.gvar.form_id = data[4]
+					self.gvar.gameUI.calc_score = data[5]
+					self.gvar.hasStatus.set()
+					print "SERVER: Got Game Status From player {}".format(self.ID)
 			elif data[0] == 3: #(3, grid): receive a request for a grid,
-				print "SERVER: receive a request for a grid {} from player {}".format(data[1], ID)
-				#gvar.lock.acquire()
-				if (gvar.gameStatus[data[1]] == -1): #-1: no one
+				print "SERVER: receive a request for a grid {} from player {}".format(data[1], self.ID)
+				if (self.gvar.gameStatus[data[1]] == -1): #-1: no one
 					print "SERVER: no one occupy the grid, send approval"
-					gvar.gameStatus[data[1]] = -2 # -2: reserve for someone
-					send_tcp_msg(gvar.playerPos[ID].conn, (4, data[1])) # approval
+					self.gvar.gameStatus[data[1]] = -2 # -2: reserve for someone
+					self.gvar.playerPos[self.ID].conn.send_msg((4, data[1])) # approval
 				else:
 					print "SERVER: someone occupy the grid, send refusal"
-					send_tcp_msg(gvar.playerPos[ID].conn, (5,)) # refusal
-				#gvar.lock.release()
-				gvar.playerPos[ID].last_atime = time.time()
+					self.gvar.playerPos[self.ID].conn.send_msg((5,)) # refusal
 			elif data[0] == 4: # (4, grid) approval
 				print "SERVER: got approval for grid{}".format(data[1])
-				#gvar.lock.acquire()
-				gvar.gameStatus[data[1]] = -3
-				#gvar.lock.release()
-				gvar.canMoveSignal.set()
-				gvar.playerPos[ID].last_atime = time.time()
+				self.gvar.gameStatus[data[1]] = -3
+				self.gvar.canMoveSignal.set()
 			elif data[0] == 5: # (5,) refusal 
 				print "SERVER: got refusal for grid"
-				gvar.canMoveSignal.set()
-				gvar.playerPos[ID].last_atime = time.time()
+				self.gvar.canMoveSignal.set()
 			elif data[0] == 6: # (6, grid) movement
-				print "SERVER: player {} move to grid {}".format(ID, data[1])
-				#gvar.lock.acquire()
-				if gvar.playerPos[ID].x is None:
-					gvar.gameStatus[data[1]] = ID
-					gvar.playerPos[ID].x = data[1][0]
-					gvar.playerPos[ID].y = data[1][1]
-					gvar.myPainter.paintNewOtherSignal.emit(ID)
+				print "SERVER: player {} move to grid {}".format(self.ID, data[1])
+				if self.gvar.playerPos[self.ID].x is None:
+					self.gvar.gameStatus[data[1]] = self.ID
+					self.gvar.playerPos[self.ID].x = data[1][0]
+					self.gvar.playerPos[self.ID].y = data[1][1]
+					self.gvar.myPainter.paintNewOtherSignal.emit(self.ID)
 				else:
-					gvar.gameStatus[(gvar.playerPos[ID].x, gvar.playerPos[ID].y)] = -1
-					gvar.gameStatus[data[1]] = ID 
-					gvar.playerPos[ID].x = data[1][0]
-					gvar.playerPos[ID].y = data[1][1]
-					gvar.myPainter.otherMoveSignal.emit(ID)
-				#gvar.lock.release()
-				gvar.playerPos[ID].last_atime = time.time()
+					self.gvar.gameStatus[(self.gvar.playerPos[self.ID].x, self.gvar.playerPos[self.ID].y)] = -1
+					self.gvar.gameStatus[data[1]] = self.ID 
+					self.gvar.playerPos[self.ID].x = data[1][0]
+					self.gvar.playerPos[self.ID].y = data[1][1]
+					self.gvar.myPainter.otherMoveSignal.emit(self.ID)
 			elif data[0] == 12: #(12,) group leader send hb to global leader
-				print "heart beat from {} to global leader {}".format(ID, gvar.myID)
-				gvar.playerPos[ID].last_atime = time.time()
+				pass
+				#print "heart beat from {} to global leader {}".format(self.ID, self.gvar.myID)
 			elif data[0] == 13: #(13,) group member send hb to group leader
-				print "heart beat from {} to group leader {}".format(ID, gvar.myID)
-				gvar.playerPos[ID].last_atime = time.time()
+				pass
+				#print "heart beat from {} to group leader {}".format(self.ID, self.gvar.myID)
 			elif data[0] == 14: #(14, form_id)
 				print "receive new form_id {}".format(data[1])
-				gvar.new_form_id = data[1]
-				gvar.playerPos[ID].last_atime = time.time()
+				self.gvar.new_form_id = data[1]
+		self.gvar.playerPos[self.ID].last_atime = time.time()

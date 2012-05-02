@@ -8,28 +8,12 @@ from core.send_message import *
 import sys
 
 def connect_player(gvar):
-	#gvar.lock.acquire()
 	clientPP = gvar.clientPP
 	for key in clientPP.iterkeys():
 		if key != gvar.myID:
 			player = PlayerProfile(ID = key, groupID = clientPP[key][2]) 
-			player.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			try:
-				player.conn.connect((clientPP[key][0], clientPP[key][1]))
-			except Exception, exc:
-				print "Exception {}: Error can't connect player {}".format(exc, key)
-				player.conn = None
+			player.conn = socket_wrapper((clientPP[key][0], clientPP[key][1]), (11, gvar.myID, gvar.myGroup, gvar.myPort))
 			gvar.playerPos[key] = player
-	#gvar.lock.release()
-
-def send_comming_msg(gvar):
-	#gvar.lock.acquire()
-	playerPos = gvar.playerPos
-	for key in playerPos.iterkeys():
-		if key != gvar.myID and playerPos[key].conn is not None:
-			print "send comming msg to {}".format(key)
-			send_tcp_msg(playerPos[key].conn, (11, gvar.myID, gvar.myGroup, gvar.myPort))
-	#gvar.lock.release()
 	calc_global_leader(gvar)
 	calc_group_leader(gvar)
 
@@ -37,6 +21,19 @@ def start_send_hb(gvar):
 	gvar.hb_thread = threading.Thread(target = handle_all_hb, kwargs = {"gvar":gvar})
 	gvar.hb_thread.daemon = True
 	gvar.hb_thread.start()
+
+def make_send_hb_fun(gvar):
+	def send_hb():
+		gl = gvar.gl_leader
+		gp = gvar.gp_leader
+		#print "global {}, group {}".format(gl, gp)	
+		if gl == gvar.myID: # I'm global leader, I'll send hb to server
+			send_tcp_msg(gvar.ss, (8,))
+		elif gp == gvar.myID: # I'm not gl_leader, but I'm gp_leader, I'll send hb to gl_leader
+			gvar.playerPos[gl].conn.send_msg((12,))
+		else: # I'm normal group member, I'll send hb to gp
+			gvar.playerPos[gp].conn.send_msg((13,))
+	return send_hb
 
 def newRegister(gvar):
 	print "connect to Server & send register msg to server & receive clientPP, id, groupid"
@@ -55,27 +52,6 @@ def newRegister(gvar):
 	send_tcp_msg(sock, (0, gvar.myPort))
 	print "wait server to reply"
 	time.sleep(1)
-
-def handle_all_hb(gvar):
-	while True:
-		gl = gvar.gl_leader
-		gp = gvar.gp_leader
-		#print "global {}, group {}".format(gl, gp)	
-		if gl == gvar.myID: # I'm global leader, I'll send hb to server
-			send_tcp_msg(gvar.ss, (8,))
-		elif gp == gvar.myID: # I'm not gl_leader, but I'm gp_leader, I'll send hb to gl_leader
-			time_itvl = time.time() - gvar.playerPos[gl].last_stime
-		#	print "stime_itvl:{}".format(time_itvl)
-			if time_itvl > 1:
-				send_tcp_msg(gvar.playerPos[gl].conn, (12,))
-				gvar.playerPos[gl].last_stime = time.time()
-		else: # I'm normal group member, I'll send hb to gp
-			time_itvl = time.time() - gvar.playerPos[gp].last_stime
-		#	print "stime_itvl:{}".format(time_itvl)
-			if time_itvl > 1:
-				send_tcp_msg(gvar.playerPos[gp].conn, (13,))
-				gvar.playerPos[gp].last_stime = time.time()
-		time.sleep(1)
 
 def handle_ps_rcv(conn, gvar):
 	conn.settimeout(100) #TODO

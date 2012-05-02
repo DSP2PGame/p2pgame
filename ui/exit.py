@@ -5,7 +5,7 @@ import time
 
 class ExitButtonBehavior(QObject):
 	def __init__(self, gvar, mainWidget):
-		super(QObject, self).__init__()
+		super(ExitButtonBehavior, self).__init__()
 		self.gvar = gvar 
 		self.mainWidget = mainWidget 
 	

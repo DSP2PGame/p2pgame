@@ -16,14 +16,17 @@ gvar = GlobalVariable(gameUI)
 gameUI.gvar = gvar
 gvar.load_formation()
 
+
 # Register @ Server
 getFreePort(gvar)
 newRegister(gvar)
 gameUI.setExitBehavior(gvar)
 time.sleep(1)
 connect_player(gvar)
-send_comming_msg(gvar)
-start_send_hb(gvar)
+
+hb_timer = QTimer()
+hb_timer.timeout.connect(make_send_hb_fun(gvar))
+hb_timer.start(3000)
 
 putNewPlayerOnBoard(gvar)
 #print gvar.clientPP
