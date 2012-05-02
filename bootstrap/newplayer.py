@@ -102,6 +102,8 @@ class peer_msg_handler(QObject):
 	def handle_timer(self):
 		self.counter += 1
 		if self.counter >= 5: #time out
+			if self.ID is not None and self.ID not in self.gvar.playerPos:
+				return
 			gl = self.gvar.gl_leader
 			gp = self.gvar.gp_leader
 			if self.ID is not None and ((self.gvar.myID == gl and is_group_leader(self.ID, self.gvar)) or (self.gvar.myID == gp and self.groupID == self.gvar.myGroup)): 
@@ -111,6 +113,7 @@ class peer_msg_handler(QObject):
 					exc = send_tcp_msg(self.gvar.ss, (10, self.ID))
 	
 	def handle(self, s):
+		self.counter = 0
 		data = pickle.loads(str(s))
 		if self.ID is not None and self.ID not in self.gvar.playerPos and data[0] != 11:
 			return

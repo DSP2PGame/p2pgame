@@ -22,6 +22,7 @@ class socket_wrapper():
 		self.addr = addr
 		self.init_msg = init_msg
 		self.buf = []
+		self.conn = None
 		self.reconnect()
 	
 	def send_msg(self, data):
@@ -41,6 +42,8 @@ class socket_wrapper():
 
 	def reconnect(self):
 		print "reconnect"
+		if self.conn is not None:
+			self.conn.deleteLater()
 		self.conn = QTcpSocket()
 		self.conn.connectToHost(self.addr[0], self.addr[1])
 		self.conn.connected.connect(self.flush)
