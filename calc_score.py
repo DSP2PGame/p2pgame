@@ -69,7 +69,7 @@ def calc_rank_board(gvar):
 				largest_ID = key
 		if largest_ID is not None:
 			temp_flag[largest_ID] = True
-			rank.append("Player {}:\t{}".format(largest_ID, largest))
+			rank.append("Player {}: {}".format(largest_ID, largest))
 	return rank
 
 

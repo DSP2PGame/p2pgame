@@ -10,7 +10,6 @@ class ExitButtonBehavior(QObject):
 		self.mainWidget = mainWidget 
 	
 	def clickExitButton(self):
-		self.gvar.lock.acquire()
 		if self.gvar.ss is not None:
 			exc = send_tcp_msg(self.gvar.ss, (10, self.gvar.myID))
 			

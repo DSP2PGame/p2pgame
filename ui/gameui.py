@@ -83,10 +83,8 @@ class GameUI(QObject):
 			self.gvar.can_move = False
 			shown_num = 12 - last 
 			if not self.calc_score:
-				self.gvar.lock.acquire()
 				self.calc_score = True
 				calc_score(self.gvar)
-				self.gvar.lock.release()
 		else:
 			shown_num = 10 - last
 		self.timerText.setText(str(shown_num))
