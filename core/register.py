@@ -12,7 +12,7 @@ def connect_player(gvar):
 	for key in clientPP.iterkeys():
 		if key != gvar.myID:
 			player = PlayerProfile(ID = key, groupID = clientPP[key][2]) 
-			player.conn = socket_wrapper((clientPP[key][0], clientPP[key][1]), (11, gvar.myID, gvar.myGroup, gvar.myPort))
+			player.conn = socket_wrapper(key, clientPP, (clientPP[key][0], clientPP[key][1]), (11, gvar.myID, gvar.myGroup, gvar.myPort))
 			gvar.playerPos[key] = player
 	calc_global_leader(gvar)
 	calc_group_leader(gvar)

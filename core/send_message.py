@@ -18,8 +18,10 @@ def send_tcp_msg(conn, data):
 		return exc
 
 class socket_wrapper():
-	def __init__(self, addr, init_msg):
+	def __init__(self, ID, clientPP, addr, init_msg):
 		self.addr = addr
+		self.ID = ID
+		self.clientPP = clientPP
 		self.init_msg = init_msg
 		self.buf = []
 		self.conn = None
@@ -44,6 +46,8 @@ class socket_wrapper():
 		print "reconnect"
 		if self.conn is not None:
 			self.conn.deleteLater()
+		if self.ID not in self.clientPP:
+			return
 		self.conn = QTcpSocket()
 		self.conn.connectToHost(self.addr[0], self.addr[1])
 		self.conn.connected.connect(self.flush)

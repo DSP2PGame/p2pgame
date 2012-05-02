@@ -129,7 +129,7 @@ class peer_msg_handler(QObject):
 						self.gvar.score[self.ID] = 0
 						self.gvar.clientPP[self.ID] = (self.addr[0], self.port, self.groupID)
 						self.gvar.playerPos[self.ID] = PlayerProfile(ID = self.ID, groupID = self.groupID)
-						self.gvar.playerPos[self.ID].conn = socket_wrapper((self.addr[0], self.port), (11, self.gvar.myID, self.gvar.myGroup, self.gvar.myPort))
+						self.gvar.playerPos[self.ID].conn = socket_wrapper(self.ID, self.gvar.clientPP, (self.addr[0], self.port), (11, self.gvar.myID, self.gvar.myGroup, self.gvar.myPort))
 						calc_global_leader(self.gvar)
 						calc_group_leader(self.gvar)
 			elif data[0] == 1: #(1,): ask for game status
