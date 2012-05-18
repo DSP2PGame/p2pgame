@@ -5,6 +5,7 @@ Peer-to-Peer Multi-player Collaborative Pixel Formation Game
 	* Run server
 	  [python main.py B]
 	* Add a player
+	  [python main.py]
 
 - Issues
 	* Formation hardcoded
