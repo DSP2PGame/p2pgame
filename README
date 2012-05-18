@@ -1,30 +1,11 @@
-Introduction of The Pixel Game:
-	TODO
+Peer-to-Peer Multi-player Collaborative Pixel Formation Game
 
-NOTE:
-	1. There is some comment in the code with "TODO"
-	2. Improve UI
-	3. Add features => calculate target, timer counting down, maintain scores, etc...
+- How to run demo?
+	* Change server IP address in const.py
+	* Run server
+	  [python main.py B]
+	* Add a player
 
-What I've Done:
-	1. Basic Bootstrapping Server
-	2. Basic (Ugly) User Interface
-	3. Basic Interaction Between Multiple Users
-
-What I'm Going To Do:
-	1. [Kinda Done] refactor the whole code -> current code can run, but it's really ugly...
-	2. add "real" exit feature
-	3. add my uncertainties in Issues
-
-How To Run The Code For Fun:
-	1. checkout all code from github
-	2. make sure you have pyqt installed
-	3. change the SERVER_HOST to your ip address in const.py
-	4. in one console: python main.py B
-		->This will run the bootstrapping server
-	5. in another console: python main.py
-		->This will run the game
-	6. you can run multiple games and test the interaction between all players
-	7. exit feature is not completely supportted yet. it only stop the program, but it will not send LEAVE msg to server or other players -> I'm writing this feature after next Monday~
-
-Enjoy the little demo :D
+- Issues
+	* Formation hardcoded
+	* Adding new player during freezing time => global status inconsistent
